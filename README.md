@@ -3,6 +3,10 @@
 ## Demo on Azure
 https://blazorims.azurewebsites.net/
 
+admin user: admin@izl.com 
+
+password: secret
+
 ---
 ### Inventory Management System with:
 * Blazor Server-side (.Net 6)
