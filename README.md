@@ -1,5 +1,10 @@
 # BlazorIMS
-Inventory Management System with:
+
+## Demo on Azure
+https://blazorims.azurewebsites.net/
+
+---
+### Inventory Management System with:
 * Blazor Server-side (.Net 6)
 * C#
 * Bootstrap
