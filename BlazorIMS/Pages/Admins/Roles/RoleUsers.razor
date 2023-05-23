@@ -1,0 +1,104 @@
+﻿@page "/roleusers/{id}"
+@inject UserManager<IdentityUser> _userManager
+@inject RoleManager<IdentityRole> _roleManager
+@attribute [Authorize(Roles = "Admins")]
+
+<h5 class="bg-primary text-white text-center p-2">Assign Users to Role: @_role.Name</h5>
+<div>
+    <Errors Items="@_errors" />
+    <h5 class="bg-success text-white p-2">Members</h5>
+    <table class="table table-sm table-striped table-bordered">
+        <thead><tr><th>User</th><th>Email</th><th></th></tr></thead>
+        <tbody>
+            @if (!_members.Any())
+            {
+                <tr><td colspan="3" class="text-center">No members</td></tr>
+            }
+            @foreach (IdentityUser user in _members)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    <td>@user.Email</td>
+                    <td>
+                        @if (user.UserName != "admin@izl.com")
+                        {
+                            <button class="btn btn-danger" @onclick="@(async () => await toggleMembership(user.Id))">Remove</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <h5 class="bg-danger text-white p-2">Non-Members</h5>
+    <table class="table table-sm table-striped table-bordered">
+        <thead><tr><th>User</th><th>Email</th><th></th></tr></thead>
+        <tbody>
+            @if (!_nonMembers.Any())
+            {
+                <tr><td colspan="3" class="text-center">No non-members</td></tr>
+            }
+            @foreach (IdentityUser user in _nonMembers)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    <td>@user.Email</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="@(async () => await toggleMembership(user.Id))">Add</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<a class="btn btn-light" href="/roles">Back</a>
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    private IdentityRole _role { get; set; } = new();
+    private List<IdentityUser> _members { get; set; } = new();
+    private List<IdentityUser> _nonMembers { get; set; } = new();
+
+    private List<string> _errors { get; set; } = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _role = await _roleManager.FindByIdAsync(Id);
+
+        await load();
+    }
+
+    private async Task load()
+    {
+        _members = (await _userManager.GetUsersInRoleAsync(_role.Name)).ToList();
+        _nonMembers = _userManager.Users.ToList().Except(_members).ToList();
+    }
+
+    public async Task toggleMembership(string userid)
+    {
+        _errors.Clear();
+
+        var user = await _userManager.FindByIdAsync(userid);
+        IdentityResult result;
+        if (await _userManager.IsInRoleAsync(user, _role.Name))
+        {
+            result = await _userManager.RemoveFromRoleAsync(user, _role.Name);
+        }
+        else
+        {
+            result = await _userManager.AddToRoleAsync(user, _role.Name);
+        }
+        if (result.Succeeded)
+        {
+            await load();
+        }
+        else
+        {
+            foreach (IdentityError err in result.Errors)
+            {
+                _errors.Add(err.Description);
+            }
+        }
+    }
+}

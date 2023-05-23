@@ -1,0 +1,86 @@
+﻿@page "/admins"
+@attribute [Authorize(Roles = "Admins")]
+
+<PageTitle>@_title</PageTitle>
+<h3>@_title</h3>
+<hr />
+
+<style>
+    a {
+        height: 150px;
+    }
+
+        a div {
+            padding-top: 60px;
+        }
+</style>
+
+<div class="row">
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-primary" href="inventories">
+                <div>
+                    <span class="oi oi-list" aria-hidden="true"></span>
+                    Inventories
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-info" href="checkoutrequests">
+                <div>
+                    <span class="oi oi-list" aria-hidden="true"></span>
+                    Checkout Requests
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-warning" href="checkouts">
+                <div>
+                    <span class="oi oi-list" aria-hidden="true"></span>
+                    Checkouts
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-dark" href="readexcel">
+                <div>
+                    <span class="oi oi-data-transfer-upload" aria-hidden="true"></span>
+                    Read Excel
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-danger" href="users">
+                <div>
+                    <span class="oi oi-person" aria-hidden="true"></span>
+                   Users
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-outline-danger" href="roles">
+                <div>
+                    <span class="oi oi-people" aria-hidden="true"></span>
+                    Roles
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private string _title = "Dashboard Admins";
+}

@@ -1,0 +1,43 @@
+﻿@page "/inventory/{id:long}"
+@inherits OwningComponentBase<ApplicationDbContext>
+@inject QrCodeGeneratorService _qrCodeGeneratorService
+
+<PageTitle>@_title</PageTitle>
+<h3 class="bg-info text-white text-center p-1">@_title</h3>
+
+<table class="table table-sm table-bordered table-striped">
+    <tbody>
+        <tr><th>ID</th><td>@_model?.Id</td></tr>
+        <tr><th>Name</th><td>@_model?.Name</td></tr>
+        <tr><th>Category</th><td>@_model?.Category</td></tr>
+        <tr><th>Location</th><td>@_model?.Location</td></tr>
+        <tr><th>Description</th><td>@_model?.Description</td></tr>
+        <tr><th>Data Sheet</th><td>@_model?.DataSheet</td></tr>
+        <tr><th>Supplier</th><td>@_model?.Supplier</td></tr>
+        <tr><th>Comment</th><td>@_model?.Comment</td></tr>
+        <tr><th>Created By</th><td>@_model?.CreatedBy?.UserName</td></tr>
+        <tr><th>Created On</th><td>@_model?.CreatedOn</td></tr>
+        <tr><th>LastModified By</th><td>@_model?.LastModifiedBy?.UserName</td></tr>
+        <tr><th>LastModified On</th><td>@_model?.LastModifiedOn</td></tr>
+        <tr>
+            <th>Qr Code</th>
+            <td>
+                <img src="@_qrCodeGeneratorService.Genereate(_model!.Id.ToString())" width="300" height="300" title="@_model.Id.ToString()" />
+            </td>
+        </tr>
+    </tbody>
+</table>
+<NavLink class="btn btn-warning" href="@($"/inventory/edit/{_model?.Id}")">Edit</NavLink>
+<NavLink class="btn btn-light" href="/inventories">Back</NavLink>
+@code {
+    private ApplicationDbContext _db => Service;
+    [Parameter]
+    public long Id { get; set; }
+    private Inventory _model { get; set; } = new();
+    private string _title = "Inventory Details";
+
+    protected override void OnParametersSet()
+    {
+        _model = _db?.Inventories.Include(x => x.CreatedBy).Include(x => x.LastModifiedBy).FirstOrDefault(p => p.Id == Id)!;
+    }
+}

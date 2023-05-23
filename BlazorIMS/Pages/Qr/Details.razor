@@ -1,0 +1,46 @@
+﻿@*@page "/qr/{id}"*@
+@inject QrCodeGeneratorService _qrCodeGeneratorService
+
+@*<PageTitle>@_title</PageTitle>*@
+
+@if (_show)
+{
+    <div class="modal" tabindex="-1" style="display:block">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@_title for Id = @Id</h5>
+                    <button type="button" class="btn-close" @onclick="close"></button>
+                </div>
+                <div class="modal-body">
+                    <img src="@_qrCodeGeneratorService.Genereate(Id)" width="@Width" height="@Height" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" @onclick="close">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string Id { get; set; }
+    public int Width { get; set; } = 500;
+    public int Height { get; set; } = 500;
+    private string _title = "Qr Code";
+    private bool _show = false;
+
+    public void Show(string id)
+    {
+        Id = id;
+        _show = true;
+
+        StateHasChanged();
+    }
+
+    private void close()
+    {
+        Id = string.Empty;
+        _show = false;
+    }
+}

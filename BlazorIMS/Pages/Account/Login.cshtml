@@ -1,0 +1,52 @@
+﻿@page "/login"
+@using BlazorIMS.ViewModels;
+@using Microsoft.AspNetCore.Mvc.RazorPages;
+@model LoginModel
+@{
+    Layout = "/pages/shared/_layout.cshtml";
+}
+<div class="bg-primary text-center text-white p-2"><h4>Log In</h4></div>
+<div class="offset-3 col-6 my-3">
+    <div class="m-1 text-danger" asp-validation-summary="All"></div>
+    <form method="post">
+        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+        <div class="form-group">
+            <label>Email</label>
+            <input class="form-control" asp-for="Email" />
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input asp-for="Password" type="password" class="form-control" />
+        </div>
+        <button class="btn btn-primary mt-2" type="submit">Log In</button>
+    </form>
+</div>
+@functions {
+    public class LoginModel : PageModel
+    {
+        private SignInManager<IdentityUser> signInManager;
+        public LoginModel(SignInManager<IdentityUser> signinMgr)
+        {
+            signInManager = signinMgr;
+        }
+        [BindProperty]
+        public string Email { get; set; } = string.Empty;
+        [BindProperty]
+        public string Password { get; set; } = string.Empty;
+        [BindProperty(SupportsGet = true)]
+        public string? ReturnUrl { get; set; }
+        public async Task<IActionResult> OnPostAsync()
+        {
+            if (ModelState.IsValid)
+            {
+                Microsoft.AspNetCore.Identity.SignInResult result = await signInManager.PasswordSignInAsync(Email, Password, true, false);
+                if (result.Succeeded)
+                {
+                    return Redirect(ReturnUrl ?? "/");
+                }
+                ModelState.AddModelError("", "Invalid username or password");
+            }
+            return Page();
+        }
+    }
+}

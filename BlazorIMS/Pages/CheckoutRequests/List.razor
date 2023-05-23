@@ -1,0 +1,172 @@
+﻿@page "/checkoutrequests"
+
+@inherits OwningComponentBase<ApplicationDbContext>
+@inject IJSRuntime _js
+@inject CurrentUserService _currentUserService
+@inject AuditService _auditService
+@inject NavigationManager _navigationManager
+@*@attribute [Authorize(Roles = "Admins")]*@
+
+<PageTitle>@_title</PageTitle>
+<h3>@_title</h3>
+
+<div class="row mb-3">
+    <div class="input-group g-3">
+        <input class="form-control" placeholder="Text" @bind="@_searchText" />
+        <select class="form-select" @bind="@_selectedCategory">
+            <option value="" selected>Category</option>
+            @foreach (var item in _categories)
+            {
+                <option value="@item">@item</option>
+            }
+        </select>
+        <select class="form-select" @bind="@_selectedLocation">
+            <option value="" selected>Location</option>
+            @foreach (var item in _locations)
+            {
+                <option value="@item">@item</option>
+            }
+        </select>
+        <select class="form-select" @bind="@_selectedStatus">
+            <option value="" selected>Status</option>
+            <option value="@InventoryStatus.Available">@InventoryStatus.Available.ToString()</option>
+            <option value="@InventoryStatus.CheckedOut">@InventoryStatus.CheckedOut.ToString()</option>
+        </select>
+        <div>
+            <button class="btn btn-light" @onclick="reset" title="Reset"><span class="oi oi-circle-x" aria-hidden="true"></span> Reset</button>
+            <button class="btn btn-warning" @onclick="search" title="Search"><span class="oi oi-magnifying-glass" aria-hidden="true"></span> Search</button>
+        </div>
+    </div>
+</div>
+
+<table class="table table-sm table-striped table-bordered table-hover caption-top">
+    <caption>Number of Items: @_items.Count()</caption>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Inventory ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Description</th>
+            <AuthorizeView Roles="Admins">
+                <Authorized>
+                    <th></th>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Roles="Employees">
+                <Authorized>
+                </Authorized>
+            </AuthorizeView>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_items != null && _items.Any())
+        {
+            @foreach (var item in _items)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Inventory.Id</td>
+                    <td>@item.Inventory.Name</td>
+                    <td>@item.Inventory.Category</td>
+                    <td>@item.Inventory.Location</td>
+                    <td>@item.Inventory.Status.ToString()</td>
+                    <td>@item.Inventory.Description</td>
+                    <AuthorizeView Roles="Admins">
+                        <Authorized>
+                            <td><a class="btn btn-sm btn-primary" href="/qrscanner/checkout/@item.Id">Checkout</a></td>
+                        </Authorized>
+                    </AuthorizeView>
+                    <AuthorizeView Roles="Employees">
+                        <Authorized>
+                        </Authorized>
+                    </AuthorizeView>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="8" class="text-center">No Checkout Requests</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private ApplicationDbContext _db => Service;
+    private List<CheckoutRequest> _items { get; set; } = new();
+    private string _title = "Checkout Requests";
+
+    private List<string> _categories = new();
+    private List<string> _locations = new();
+    private string _searchText = string.Empty;
+    private string _selectedCategory = string.Empty;
+    private string _selectedLocation = string.Empty;
+    private InventoryStatus? _selectedStatus = null;
+
+    private IdentityUser? _currentUser;
+    private ClaimsPrincipal? _claimsPrinciple;
+
+    protected async override Task OnInitializedAsync()
+    {
+        _currentUser = await _currentUserService.GetCurrentUser();
+        _claimsPrinciple = await _currentUserService.GetClaimsPrinciple();
+
+        _categories = await _db.Inventories.Select(x => x.Category).Distinct().ToListAsync();
+        _locations = await _db.Inventories.Select(x => x.Location).Distinct().ToListAsync();
+
+        await load();
+    }
+
+    private async Task load()
+    {
+        var query = _db.CheckoutRequests.Include(x => x.Inventory).AsQueryable();
+        if (await _currentUserService.IsInRole("Admins"))
+        {
+            _items = await query.ToListAsync();
+        }
+        else
+        {
+            _items = await query.Where(x => x.CreatedById == _currentUser!.Id).ToListAsync();
+        }
+    }
+
+    private async Task search()
+    {
+        var query = _db.CheckoutRequests.AsQueryable();
+        if (!string.IsNullOrEmpty(_searchText))
+        {
+            _searchText = _searchText.ToLower();
+            query = query.Where(x => x.Inventory.Name.ToLower().Contains(_searchText) || x.Inventory.Description.ToLower().Contains(_searchText)).AsQueryable();
+        }
+
+        if (!string.IsNullOrEmpty(_selectedCategory))
+        {
+            query = query.Where(x => x.Inventory.Category == _selectedCategory).AsQueryable();
+        }
+
+        if (!string.IsNullOrEmpty(_selectedLocation))
+        {
+            query = query.Where(x => x.Inventory.Location == _selectedLocation).AsQueryable();
+        }
+
+        if (_selectedStatus != null)
+        {
+            query = query.Where(x => x.Inventory.Status == _selectedStatus).AsQueryable();
+        }
+
+        _items = await query.ToListAsync();
+    }
+    private async Task reset()
+    {
+        _searchText = string.Empty;
+        _selectedCategory = string.Empty;
+        _selectedLocation = string.Empty;
+        _selectedStatus = null;
+
+        await search();
+    }
+}

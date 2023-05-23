@@ -1,0 +1,89 @@
+﻿@inject IJSRuntime JS
+
+@if (_show)
+{
+    <div class="modal" tabindex="-1" style="display:block">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@_title</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="close"></button>
+                </div>
+                <div class="modal-body" style="height:700px">
+                    <QRCodeScanner />
+
+                    @if (!string.IsNullOrEmpty(_scannedCode))
+                    {
+                        <div class="alert alert-primary" role="alert">
+                            @_scannedCode
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" @onclick="close">Close</button>
+                    <button type="button" class="btn btn-primary">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public EventCallback<int> OnClose { get; set; }
+    private string _title = "QR Scanner";
+    private bool _show = false;
+
+    private QRCodeScannerJsInterop? _qrCodeScannerJsInterop;
+    private Action<string>? _onQrCodeScanAction;
+    private string _scannedCode = string.Empty;
+
+    //protected override async Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        _onQrCodeScanAction = async (code) => await OnQrCodeScan(code);
+
+    //        _qrCodeScannerJsInterop = new QRCodeScannerJsInterop(JS);
+    //        await _qrCodeScannerJsInterop.Init(_onQrCodeScanAction);
+    //    }
+    //}
+
+    public async Task Show()
+    {
+        _onQrCodeScanAction = async (code) => await OnQrCodeScan(code);
+
+        _qrCodeScannerJsInterop = new QRCodeScannerJsInterop(JS);
+        await _qrCodeScannerJsInterop.Init(_onQrCodeScanAction);
+
+        _show = true;
+        StateHasChanged();
+    }
+    public void close()
+    {
+        _show = false;
+    }
+    public async Task accept()
+    {
+        await OnClose.InvokeAsync(int.Parse(_scannedCode));
+        close();
+    }
+
+    private async Task OnQrCodeScan(string code)
+    {
+        _scannedCode = string.Empty;
+        if (!string.IsNullOrEmpty(code))
+        {
+            await StopQRScan();
+            _scannedCode = code;
+        }
+
+        StateHasChanged();
+        //Console.WriteLine($"OnQrCodeScan {code}");
+    }
+
+    protected async Task StopQRScan()
+    {
+        await _qrCodeScannerJsInterop!.StopRecording();
+    }
+}

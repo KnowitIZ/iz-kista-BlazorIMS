@@ -1,0 +1,89 @@
+﻿@page "/xproducts"
+@page "/xproducts/{page:int}"
+@page "/xproducts/{category}/{page:int}"
+@inherits OwningComponentBase<ApplicationDbContext>
+<PageTitle>@_title</PageTitle>
+<h3>@_title</h3>
+
+<div class="row">
+    <div class="col-3">
+        <a class="btn btn-@(string.IsNullOrEmpty(Category) ? "primary" : "light") d-block my-1" href="products/1">All</a>
+        @foreach (var item in _categories)
+        {
+            <a class="btn btn-@(item == Category ? "primary" : "light") d-block my-1" href="products/@item/1">@item</a>
+        }
+    </div>
+    <div class="col-9">
+        <Paging TotalItems="1" ItemsPerPage="1" CurrentPage="1" />
+
+        <div>
+            @foreach (var p in _items ?? Enumerable.Empty<Product>())
+            {
+                <div class="card card-outline-primary m-1 p-1">
+                    <div class="bg-faded p-1">
+                        <h4>
+                            @p.Name
+                            <span class="badge rounded-pill bg-primary text-white" style="float:right">
+                                <small>@p.Price.ToString("c")</small>
+                            </span>
+                        </h4>
+                    </div>
+                    <div class="card-text p-1">
+                        @p.Description
+                        <button class="btn btn-success btn-sm pull-right" style="float:right">
+                            Add To Cart
+                        </button>
+                    </div>
+
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    private ApplicationDbContext _db => Service;
+
+    [Parameter]
+    public int Page { get; set; } = 1;
+    [Parameter]
+    public string? Category { get; set; }
+
+    private List<Product> _items = new();
+    private List<string> _categories = new();
+    private string _title = "Products";
+    private int _pageSize = 4;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await _db.Products.Select(x => x.Category).Distinct().OrderBy(x => x).ToListAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Page == 0)
+        {
+            Page = 1;
+        }
+        await load();
+
+        _categories = await _db.Products.Select(x => x.Category).Distinct().ToListAsync();
+    }
+
+    private async Task load()
+    {
+        var query = _db.Products.AsQueryable();
+
+        if (!string.IsNullOrEmpty(Category))
+        {
+            query = query.Where(x => x.Category == Category);
+        }
+
+        _items = await query
+        .OrderBy(p => p.Id)
+        .Skip((Page - 1) * _pageSize)
+        .Take(_pageSize).ToListAsync();
+    }
+}

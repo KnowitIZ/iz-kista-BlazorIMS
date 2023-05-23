@@ -1,0 +1,24 @@
+﻿@page "/user"
+@inject UserManager<IdentityUser> _userManager
+@attribute [Authorize(Roles = "Admins")]
+
+<PageTitle>@_title</PageTitle>
+<h3 class="bg-primary text-white text-center p-1">@_title</h3>
+
+<table class="table table-sm table-striped table-bordered">
+    <tbody>
+        <tr><th>User</th><td>@_model?.UserName</td></tr>
+        <tr><th>Email</th><td>@_model?.Email</td></tr>
+        <tr><th>Phone</th><td>@_model?.PhoneNumber</td></tr>
+    </tbody>
+</table>
+
+@code {
+    private string _title = "User Details";
+    private IdentityUser _model = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await _userManager.FindByNameAsync("admin");
+    }
+}

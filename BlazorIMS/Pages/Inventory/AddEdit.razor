@@ -1,0 +1,166 @@
+﻿@page "/inventory/create"
+@page "/inventory/edit/{id:long}"
+@inherits OwningComponentBase<ApplicationDbContext>
+@inject AuditService _auditService
+@inject CurrentUserService _currentUserService
+@inject NavigationManager? _navigationManager
+
+<PageTitle>@_title</PageTitle>
+<h3 class="bg-@(Id == 0 ? "primary" : "warning") text-white text-center p-1">@_title</h3>
+
+@if (_errors.Any())
+{
+    <Errors Items="@_errors" />
+}
+
+<EditForm Model="@_model" OnValidSubmit="save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    @if (_model.Id != 0)
+    {
+        <div class="form-group">
+            <label>ID</label>
+            <input class="form-control" disabled value="@_model.Id" />
+        </div>
+    }
+    <div class="form-group">
+        <label>Name</label>
+        <InputText class="form-control" @bind-Value="_model.Name" />
+        <ValidationMessage For="@(() => _model.Name)" />
+    </div>
+    <div class="form-group">
+        <label>Category</label>
+        <InputText class="form-control" @bind-Value="_model.Category" />
+        <ValidationMessage For="@(() => _model.Category)" />
+    </div>
+    <div class="form-group">
+        <label>Location</label>
+        <InputText class="form-control" @bind-Value="_model.Location" />
+        <ValidationMessage For="@(() => _model.Location)" />
+    </div>
+    <div class="form-group">
+        <label>Status</label>
+        <input class="form-control" disabled value="@_model.Status.ToString()" />
+    </div>
+    <div class="form-group">
+        <label>Description</label>
+        <InputTextArea class="form-control" @bind-Value="_model.Description" />
+        <ValidationMessage For="@(() => _model.Description)" />
+    </div>
+    <div class="form-group">
+        <label>Datasheet</label>
+        <input class="form-control" disabled value="@_model.DataSheet" />
+    </div>
+    <div class="form-group">
+        <label>Supplier</label>
+        <InputText class="form-control" @bind-Value="_model.Supplier" />
+        <ValidationMessage For="@(() => _model.Supplier)" />
+    </div>
+    @if (Id == 0)
+    {
+        <div class="form-group">
+            <label>Quantity</label>
+            <InputNumber class="form-control" @bind-Value="_quantity" />
+            @*<ValidationMessage For="@(() => _quantity)" />*@
+        </div>
+    }
+    <div class="form-group">
+        <label>Quantity CheckedOut</label>
+        <input class="form-control" disabled value="@_model.QuantityCheckedOut" />
+    </div>
+    <div class="form-group">
+        <label>Comment</label>
+        <InputTextArea class="form-control" @bind-Value="_model.Comment" />
+        <ValidationMessage For="@(() => _model.Comment)" />
+    </div>
+    <div class="mt-2">
+        <button type="submit" class="btn btn-@(Id == 0 ? "primary" : "warning")">Save</button>
+        <NavLink class="btn btn-light" href="inventories">Cancel</NavLink>
+    </div>
+</EditForm>
+@code {
+    private ApplicationDbContext _db => Service;
+    [Parameter]
+    public long Id { get; set; } = 0;
+
+    private Inventory _model { get; set; } = new();
+    private string _title = string.Empty;
+    private IdentityUser _currentUser;
+    private int _quantity;
+    private List<string> _errors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUser = await _currentUserService.GetCurrentUser();
+    }
+
+    protected override void OnParametersSet()
+    {
+        _title = Id == 0 ? "Create" : "Edit" + " Inventory";
+
+        if (Id != 0)
+        {
+            _model = _db.Inventories.FirstOrDefault(p => p.Id == Id) ?? new();
+        }
+    }
+    private async Task save()
+    {
+        _errors.Clear();
+        if (Id == 0 && _quantity < 1)
+        {
+            _errors.Add("Please eneter a positive Quantity");
+        }
+
+        if (!_errors.Any())
+        {
+            if (Id == 0)
+            {
+                _auditService.ForCreate(_model, _currentUser.Id);
+                for (int i = 1; i <= _quantity; i++)
+                {
+                    await _db.Inventories.AddAsync(copyModel(_model));
+                }
+            }
+            else
+            {
+                var model = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _model.Id);
+                if (model != null)
+                {
+                    model.Name = _model.Name;
+                    model.Category = _model.Category;
+                    model.Location = _model.Location;
+                    model.Description = _model.Description;
+                    model.Supplier = _model.Supplier;
+                    model.Comment = _model.Comment;
+
+                    _auditService.ForEdit(_model, _currentUser.Id);
+
+                    _db.Inventories.Update(model);
+
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            _navigationManager?.NavigateTo("/inventories");
+        }
+    }
+
+    private Inventory copyModel(Inventory inModel)
+    {
+        var model = new Inventory();
+        model.Name = inModel.Name;
+        model.Category = inModel.Category;
+        model.Location = inModel.Location;
+        model.Description = inModel.Description;
+        model.Supplier = inModel.Supplier;
+        model.Comment = inModel.Comment;
+
+        model.CreatedById = inModel.CreatedById;
+        model.CreatedOn = inModel.CreatedOn;
+        model.LastModifiedById = inModel.LastModifiedById;
+        model.LastModifiedOn = inModel.LastModifiedOn;
+
+        return model;
+    }
+}

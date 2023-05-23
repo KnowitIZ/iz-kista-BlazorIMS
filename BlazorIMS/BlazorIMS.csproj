@@ -1,0 +1,89 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-BlazorIMS-04317e78-3559-43ab-bc1e-6e563373804a</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <Compile Remove="Pages\Products\**" />
+    <Content Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <Content Remove="Pages\Products\**" />
+    <EmbeddedResource Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <EmbeddedResource Remove="Pages\Products\**" />
+    <None Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <None Remove="Pages\Products\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Areas\Identity\Pages\Account\AccessDenied.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ConfirmEmail.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ConfirmEmailChange.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ExternalLogin.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ForgotPassword.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ForgotPasswordConfirmation.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\Lockout.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\Login.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\LoginWith2fa.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\LoginWithRecoveryCode.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\Logout.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\Register.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\RegisterConfirmation.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ResendEmailConfirmation.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ResetPassword.cshtml.cs" />
+    <Compile Remove="Areas\Identity\Pages\Account\ResetPasswordConfirmation.cshtml.cs" />
+    <Compile Remove="Data\Models\Product.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Areas\Identity\Pages\Account\AccessDenied.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ConfirmEmail.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ConfirmEmailChange.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ExternalLogin.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ForgotPassword.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ForgotPasswordConfirmation.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\Lockout.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\Login.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\LoginWith2fa.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\LoginWithRecoveryCode.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\Register.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\RegisterConfirmation.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ResendEmailConfirmation.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ResetPassword.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\ResetPasswordConfirmation.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\_StatusMessage.cshtml" />
+    <Content Remove="Areas\Identity\Pages\Account\_ViewImports.cshtml" />
+    <Content Remove="Pages\Account\Login.razor" />
+    <Content Remove="Pages\Account\Logout.razor" />
+    <Content Remove="Pages\Inventory\List2.razor" />
+    <Content Remove="Pages\Inventory\ReadExcel - Copy.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Pages\Inventory\List.razor" />
+    <None Include="Pages\Shared\_Layout.cshtml" />
+    <None Include="Pages\Shared\_LoginPartial.cshtml" />
+    <None Include="Pages\Shared\_ValidationScriptsPartial.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus" Version="6.2.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.16" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.16" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.16" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.16" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.16" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.13" />
+    <PackageReference Include="QRCoderNetCore" Version="1.0.0" />
+    <PackageReference Include="ReactorBlazorQRCodeScanner" Version="1.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\excels\" />
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
+</Project>

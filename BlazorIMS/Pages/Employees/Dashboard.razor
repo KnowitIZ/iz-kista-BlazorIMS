@@ -1,0 +1,53 @@
+﻿@page "/employees"
+
+<PageTitle>@_title</PageTitle>
+<h3>@_title</h3>
+
+<hr />
+<style>
+    a {
+        height: 150px;
+    }
+
+        a div {
+            padding-top: 60px;
+        }
+</style>
+
+<div class="row">
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-primary" href="inventories">
+                <div>
+                    <span class="oi oi-list" aria-hidden="true"></span>
+                    Inventories
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-info" href="checkoutrequests">
+                <div>
+                    <span class="oi oi-list" aria-hidden="true"></span>
+                    Checkout Requests
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="col-4">
+        <div class="d-grid m-3">
+            <a class="btn btn-warning" href="checkouts">
+                <div>
+                    <span class="oi oi-list" aria-hidden="true"></span>
+                    Checkouts
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _title = "Dashboard Employees";
+}

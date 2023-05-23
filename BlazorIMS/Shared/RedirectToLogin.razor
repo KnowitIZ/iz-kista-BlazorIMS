@@ -1,0 +1,12 @@
+﻿@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter]
+    public string? ReturnUrl { get; set; }
+    protected override void OnInitialized()
+    {
+        ReturnUrl = "/" + ReturnUrl;
+        //ReturnUrl = "~/" + ReturnUrl;
+        NavigationManager.NavigateTo($"Login?returnUrl={ReturnUrl}", forceLoad: true);
+    }
+}

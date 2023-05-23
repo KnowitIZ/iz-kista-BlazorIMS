@@ -1,0 +1,131 @@
+﻿@page "/qrscanner/checkout/{checkoutRequestId:int}"
+@page "/qrscanner/checkin/{checkoutId:int}"
+@using ReactorBlazorQRCodeScanner
+@inherits OwningComponentBase<ApplicationDbContext>
+@inject AuditService _auditService
+@inject CurrentUserService _currentUserService
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _jS
+@attribute [Authorize(Roles = "Admins")]
+@*https://www.nuget.org/packages/ReactorBlazorQRCodeScanner/*@
+@*https://github.com/YannVasseur35/ReactorBlazorQRCodeScanner*@
+
+<PageTitle>@_title</PageTitle>
+<h1>@_title</h1>
+
+<QRCodeScanner />
+
+@*@if (!string.IsNullOrEmpty(_scannedCode))
+{
+    <div class="alert alert-primary" role="alert">
+        @_scannedCode
+    </div>
+}*@
+
+@code {
+    private ApplicationDbContext _db => Service;
+    private string _title = "QR Scanner";
+
+    [Parameter]
+    public int CheckoutRequestId { get; set; }
+    [Parameter]
+    public int CheckoutId { get; set; }
+
+    private QRCodeScannerJsInterop? _qrCodeScannerJsInterop;
+    private Action<string>? _onQrCodeScanAction;
+    private string _scannedCode = string.Empty;
+
+    private IdentityUser? _currentUser;
+
+    private CheckoutRequest? _checkoutRequest = null;
+    private Checkout? _checkout = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _scannedCode = string.Empty;
+
+        if (CheckoutRequestId > 0)
+        {
+            _checkoutRequest = await _db.CheckoutRequests.FirstOrDefaultAsync(x => x.Id == CheckoutRequestId);
+        }
+
+        if (CheckoutId > 0)
+        {
+            _checkout = await _db.Checkouts.FirstOrDefaultAsync(x => x.Id == CheckoutId);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _currentUser = await _currentUserService.GetCurrentUser();
+
+            _onQrCodeScanAction = async (code) => await OnQrCodeScan(code);
+
+            _qrCodeScannerJsInterop = new QRCodeScannerJsInterop(_jS);
+            await _qrCodeScannerJsInterop.Init(_onQrCodeScanAction);
+        }
+    }
+
+    private async Task OnQrCodeScan(string code)
+    {
+        if (string.IsNullOrEmpty(_scannedCode))
+        {
+            _scannedCode = code;
+
+            //StateHasChanged();
+            //Console.WriteLine($"OnQrCodeScan {code}");
+
+            await onScannedCode();
+            await StopQRScan();
+
+        }
+    }
+
+    private async Task onScannedCode()
+    {
+        if (CheckoutRequestId > 0 && _checkoutRequest != null)
+        {
+            if (_checkoutRequest.InventoryId.ToString() == _scannedCode)
+            {
+                var itemsToDelete = await _db.CheckoutRequests.Where(x => x.InventoryId == _checkoutRequest.InventoryId).ToListAsync();
+                _db.RemoveRange(itemsToDelete);
+
+                var checkout = new Checkout();
+                checkout.InventoryId = _checkoutRequest.InventoryId;
+                _auditService.ForCreate(checkout, _currentUser!.Id);
+                checkout.CheckedOutById = _checkoutRequest.CreatedById!;
+                await _db.Checkouts.AddAsync(checkout);
+
+                var inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _checkoutRequest.InventoryId);
+                inventory!.Status = InventoryStatus.CheckedOut;
+
+                await _db.SaveChangesAsync();
+
+                _navigationManager.NavigateTo("checkoutrequests");
+            }
+        }
+        else if (CheckoutId > 0 && _checkout != null)
+        {
+            if (_checkout.InventoryId.ToString() == _scannedCode)
+            {
+                var itemToDelete = await _db.Checkouts.Where(x => x.InventoryId == _checkout.InventoryId).ToListAsync();
+                _db.RemoveRange(itemToDelete);
+
+                var inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _checkout.InventoryId);
+                inventory!.Status = InventoryStatus.Available;
+
+                await _db.SaveChangesAsync();
+
+                _navigationManager.NavigateTo("checkouts");
+            }
+        }
+    }
+
+    protected async Task StopQRScan()
+    {
+        await _qrCodeScannerJsInterop!.StopRecording();
+    }
+
+}

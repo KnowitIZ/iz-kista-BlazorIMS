@@ -1,0 +1,245 @@
+﻿@page "/inventories"
+
+@inherits OwningComponentBase<ApplicationDbContext>
+@inject IJSRuntime _js
+@inject QrCodeGeneratorService _qrCodeGeneratorService
+@inject CurrentUserService _currentUserService
+@inject AuditService _auditService
+@inject NavigationManager _navigationManager
+
+<PageTitle>@_title</PageTitle>
+<h3>@_title</h3>
+
+<div class="row mb-3">
+    <div class="input-group g-3">
+        <input class="form-control" placeholder="Text" @bind="@_searchText" />
+        <select class="form-select" @bind="@_selectedCategory">
+            <option value="" selected>Category</option>
+            @foreach (var item in _categories)
+            {
+                <option value="@item">@item</option>
+            }
+        </select>
+        <select class="form-select" @bind="@_selectedLocation">
+            <option value="" selected>Location</option>
+            @foreach (var item in _locations)
+            {
+                <option value="@item">@item</option>
+            }
+        </select>
+        <select class="form-select" @bind="@_selectedStatus">
+            <option value="" selected>Status</option>
+            <option value="@InventoryStatus.Available">@InventoryStatus.Available.ToString()</option>
+            <option value="@InventoryStatus.CheckedOut">@InventoryStatus.CheckedOut.ToString()</option>
+        </select>
+        <div>
+            <button class="btn btn-light" @onclick="reset" title="Reset"><span class="oi oi-circle-x" aria-hidden="true"></span> Reset</button>
+            <button class="btn btn-warning" @onclick="search" title="Search"><span class="oi oi-magnifying-glass" aria-hidden="true"></span> Search</button>
+        </div>
+    </div>
+</div>
+
+<table class="table table-sm table-striped table-bordered table-hover caption-top">
+    <caption>Number of Items: @_items.Count()</caption>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Description</th>
+            <AuthorizeView Roles="Admins">
+                <Authorized>
+                    <th>QR Code</th>
+                    <th><NavLink class="btn btn-primary btn-sm" href="/inventory/create">Create</NavLink></th>
+                </Authorized>
+            </AuthorizeView>
+            <AuthorizeView Roles="Employees">
+                <Authorized>
+                    <th style="width:199px"></th>
+                </Authorized>
+            </AuthorizeView>
+        </tr>
+    </thead>
+    <tbody>
+        @if (_items.Any())
+        {
+            @foreach (var item in _items)
+            {
+                <tr class="@(item.Status == InventoryStatus.CheckedOut ? "table-danger" :"")">
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.Category</td>
+                    <td>@item.Location</td>
+                    <td>@item.Status.ToString()</td>
+                    <td>@item.Description</td>
+                    <AuthorizeView Roles="Admins">
+                        <Authorized>
+                            <td @onclick="@(() => {_qrModal!.Show(item.Id.ToString());})">
+                                <img src="@_qrCodeGeneratorService.Genereate(item.Id.ToString())" width="100" height="100" title="@item.Id.ToString()" />
+                            </td>
+                            <td>
+                                <NavLink class="btn btn-info btn-sm" href="@($"/inventory/{item.Id}")">Details</NavLink>
+                                <NavLink class="btn btn-warning btn-sm" href="@($"/inventory/edit/{item.Id}")">Edit</NavLink>
+                                <button class="btn btn-danger btn-sm" @onclick="@(async () => await delete(item.Id))">Delete</button>
+                                <button class="btn btn-light btn-sm" @onclick="@(async () => await clone(item))">Clone</button>
+                            </td>
+                        </Authorized>
+                    </AuthorizeView>
+                    <AuthorizeView Roles="Employees">
+                        <Authorized>
+                            <th>
+                                @if (item.Status == InventoryStatus.Available)
+                                {
+                                    if (_checkoutRequestIds.Contains(item.Id))
+                                    {
+                                        <button class="btn btn-danger btn-sm" @onclick="@(async () => await toggleCheckoutRequest(item.Id))">Remove Checkout Request</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-primary btn-sm" @onclick="@(async () => await toggleCheckoutRequest(item.Id))">Checkout Request</button>
+                                    }
+                                }
+                            </th>
+                        </Authorized>
+                    </AuthorizeView>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="8" class="text-center">No Inventories</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<BlazorIMS.Pages.Qr.Details @ref="_qrModal" />
+
+@code {
+    private ApplicationDbContext _db => Service;
+    private List<Inventory> _items { get; set; } = new();
+    private string _title = "Inventories";
+
+    private List<string> _categories = new();
+    private List<string> _locations = new();
+    private string _searchText = string.Empty;
+    private string _selectedCategory = string.Empty;
+    private string _selectedLocation = string.Empty;
+    private InventoryStatus? _selectedStatus = null;
+
+    private BlazorIMS.Pages.Qr.Details? _qrModal = new();
+
+    private IdentityUser? _currentUser;
+    private ClaimsPrincipal? _claimsPrinciple;
+    private List<int> _checkoutRequestIds = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        _currentUser = await _currentUserService.GetCurrentUser();
+        _claimsPrinciple = await _currentUserService.GetClaimsPrinciple();
+
+        _categories = await _db.Inventories.Select(x => x.Category).Distinct().ToListAsync();
+        _locations = await _db.Inventories.Select(x => x.Location).Distinct().ToListAsync();
+
+        await load();
+    }
+
+    private async Task load()
+    {
+        if (_claimsPrinciple!.IsInRole("Employees"))
+        {
+            _checkoutRequestIds = await _db.CheckoutRequests.Where(x => x.CreatedById == _currentUser!.Id).Select(x => x.InventoryId).ToListAsync();
+        }
+        else if (_claimsPrinciple!.IsInRole("Admins"))
+        {
+            _checkoutRequestIds = await _db.CheckoutRequests.Select(x => x.InventoryId).ToListAsync();
+        }
+        _items = await _db.Inventories.OrderByDescending(x => x.Id).ToListAsync();
+    }
+
+    private async Task search()
+    {
+        var query = _db.Inventories.AsQueryable();
+        if (!string.IsNullOrEmpty(_searchText))
+        {
+            _searchText = _searchText.ToLower();
+            query = query.Where(x => x.Name.ToLower().Contains(_searchText) || x.Description.ToLower().Contains(_searchText)).AsQueryable();
+        }
+
+        if (!string.IsNullOrEmpty(_selectedCategory))
+        {
+            query = query.Where(x => x.Category == _selectedCategory).AsQueryable();
+        }
+
+        if (!string.IsNullOrEmpty(_selectedLocation))
+        {
+            query = query.Where(x => x.Location == _selectedLocation).AsQueryable();
+        }
+
+        if (_selectedStatus != null)
+        {
+            query = query.Where(x => x.Status == _selectedStatus).AsQueryable();
+        }
+
+        _items = await query.OrderByDescending(x=> x.Id).ToListAsync();
+    }
+    private async Task reset()
+    {
+        _searchText = string.Empty;
+        _selectedCategory = string.Empty;
+        _selectedLocation = string.Empty;
+        _selectedStatus = null;
+
+        await search();
+    }
+
+    private async Task delete(int id)
+    {
+        if (await _js.InvokeAsync<bool>("confirm", "Are you sure you want to delete this item?"))
+        {
+            var model = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == id);
+            if (model != null)
+            {
+                _db.Inventories.Remove(model);
+                await _db.SaveChangesAsync();
+
+                await load();
+            }
+        }
+    }
+
+    private async Task toggleCheckoutRequest(int inventoryId)
+    {
+        var cr = await _db.CheckoutRequests.FirstOrDefaultAsync(x => x.CreatedById == _currentUser!.Id && x.InventoryId == inventoryId);
+        if (cr == null)
+        {
+            cr = new CheckoutRequest();
+            cr.InventoryId = inventoryId;
+            _auditService.ForCreate(cr, _currentUser!.Id);
+
+            _db.CheckoutRequests.Add(cr);
+        }
+        else
+        {
+            _db.CheckoutRequests.Remove(cr);
+        }
+
+        await _db.SaveChangesAsync();
+
+        await load();
+    }
+
+    private async Task clone(Inventory item)
+    {
+        item.Id = 0;
+        _auditService.ForCreate(item, _currentUser!.Id);
+        await _db.Inventories.AddAsync(item);
+        await _db.SaveChangesAsync();
+
+        await load();
+    }
+
+}

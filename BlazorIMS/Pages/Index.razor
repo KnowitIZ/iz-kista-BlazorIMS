@@ -1,0 +1,17 @@
+﻿@page "/"
+@inject CurrentUserService _currentUserService
+@inject NavigationManager _navigationManager
+
+@code{
+    protected override async Task OnInitializedAsync()
+    {
+        if (await _currentUserService.IsInRole("Admins"))
+        {
+            _navigationManager.NavigateTo("admins");
+        }
+        else
+        {
+            _navigationManager.NavigateTo("employees");
+        }
+    }
+}

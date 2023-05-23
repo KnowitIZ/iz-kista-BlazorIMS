@@ -1,0 +1,237 @@
+﻿@page "/readexcel"
+@attribute [Authorize(Roles ="Admins")]
+@inherits OwningComponentBase<ApplicationDbContext>
+
+@using System
+@using System.IO
+@using Microsoft.AspNetCore.Hosting
+@using Microsoft.Extensions.Logging
+@using OfficeOpenXml;
+@inject ILogger<ReadExcel> Logger
+@inject IWebHostEnvironment Environment
+@inject AuditService _auditService
+@inject CurrentUserService _currentUserService
+@inject NavigationManager _navigationManager
+
+@*https://learn.microsoft.com/en-us/aspnet/core/blazor/file-uploads?view=aspnetcore-7.0&pivots=server*@
+@*https://github.com/EPPlusSoftware/EPPlus*@
+@*https://stackoverflow.com/questions/33368676/how-to-read-excel-using-epplus*@
+
+<h3>Upload Files</h3>
+<p>
+    <label>
+        <InputFile OnChange="@LoadFiles" single />
+    </label>
+</p>
+
+@if (_items.Any())
+{
+    <div>
+        <button class="btn btn-primary" @onclick="save">Save</button>
+    </div>
+
+    int row = 1;
+    <table class="table table-sm table-striped table-hover table-bordered caption-top">
+        <caption>Number of items: @_items.Count()</caption>
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">Supplier</th>
+                <th scope="col">Desc</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Storage Place</th>
+                <th scope="col">Comment</th>
+                <th scope="col">CheckedOut Quantity</th>
+                <th scope="col">CheckedOut By Email</th>
+                <th scope="col">CheckedOut For Project</th>
+                <th scope="col">CheckedOut Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in _items)
+            {
+                <tr>
+                    <th scope="row">@(row++)</th>
+                    <td>@item.Name</td>
+                    <td>@item.Supplier</td>
+                    <td>@item.Desc</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.StoragePlace</td>
+                    <td>@item.Comment</td>
+                    <td>@item.CheckedOutQuantity</td>
+                    <td>@item.CheckedOutByEmail</td>
+                    <td>@item.CheckedOutForProject</td>
+                    <td>@item.CheckedOutDate</td>
+                </tr>
+            }
+            
+        </tbody>
+    </table>
+}
+
+@code {
+    private ApplicationDbContext _db => Service;
+
+    private List<IBrowserFile> loadedFiles = new();
+    private int maxAllowedFiles = 1;
+    private bool isLoading;
+    private List<ExcelViewModel> _items = new();
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        _items.Clear();
+        isLoading = true;
+        loadedFiles.Clear();
+
+        string path = string.Empty;
+
+        foreach (var file in e.GetMultipleFiles(maxAllowedFiles))
+        {
+            try
+            {
+                loadedFiles.Add(file);
+
+                path = Path.Combine(Environment.ContentRootPath, "wwwroot", "uploads", "excels", file.Name);
+
+                await using FileStream fs = new(path, FileMode.Create);
+                await file.OpenReadStream().CopyToAsync(fs);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("File: {Filename} Error: {Error}",
+                    file.Name, ex.Message);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(path))
+        {
+            var list = GetListFromExcel(path, "Others");
+            _items = trim(list);
+        }
+
+        isLoading = false;
+    }
+
+    private List<ExcelViewModel> GetListFromExcel(string path, string wsName, int headerRows = 2)
+    {
+        ExcelPackage.LicenseContext = LicenseContext.Commercial;
+
+        var vms = new List<ExcelViewModel>();
+
+        using (var p = new ExcelPackage(path))
+        {
+            var ws = p.Workbook.Worksheets[wsName];
+
+            int colCount = ws.Dimension.End.Column;
+            int rowCount = ws.Dimension.End.Row;
+            for (int row = headerRows + 1; row <= rowCount; row++)
+            {
+                var vm = new ExcelViewModel();
+
+                int col = 1;
+                var value = ws.Cells[row, col].Value;
+                vm.Name = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.Supplier = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.Desc = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.Quantity = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.StoragePlace = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.Comment = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.CheckedOutQuantity = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.CheckedOutByEmail = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.CheckedOutForProject = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.CheckedOutDate = value == null ? "" : value.ToString();
+
+                vms.Add(vm);
+            }
+        }
+
+        return vms;
+    }
+
+    private List<ExcelViewModel> trim(List<ExcelViewModel> list)
+    {
+        var result = new List<ExcelViewModel>();
+        foreach (var item in list)
+        {
+            if (
+                string.IsNullOrEmpty(item.Name) && 
+                string.IsNullOrEmpty(item.Supplier) &&
+                string.IsNullOrEmpty(item.Desc) &&
+                string.IsNullOrEmpty(item.Quantity) &&
+                string.IsNullOrEmpty(item.StoragePlace) &&
+                string.IsNullOrEmpty(item.Comment) &&
+                string.IsNullOrEmpty(item.CheckedOutQuantity) &&
+                string.IsNullOrEmpty(item.CheckedOutByEmail) &&
+                string.IsNullOrEmpty(item.CheckedOutForProject) &&
+                string.IsNullOrEmpty(item.CheckedOutDate)
+            )
+            {
+            }
+            else
+            {
+                result.Add(item);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task save()
+    {
+        var currentUser = await _currentUserService.GetCurrentUser();
+
+        foreach (var item in _items)
+        {
+            var supplier = string.IsNullOrEmpty(item.Supplier) ? "?" : item.Supplier;
+            if (!await _db.Inventories.AnyAsync(x => x.Name == item.Name && x.Supplier == supplier && x.Description == item.Desc))
+            {
+                int quantity = string.IsNullOrEmpty(item.Quantity) ? 1 : int.Parse(item.Quantity);
+                for (int i = 1; i <= quantity; i++)
+                {
+                    var inventory = new Inventory();
+                    inventory.Name = item.Name!;
+                    inventory.Category = "?";
+                    inventory.Location = string.IsNullOrEmpty(item.StoragePlace) ? "?" : item.StoragePlace;
+                    inventory.Supplier = supplier;
+                    inventory.Description = item.Desc!;
+                    inventory.Comment = item.Comment;
+
+                    _auditService.ForCreate(inventory, currentUser.Id);
+
+                    await _db.Inventories.AddAsync(inventory);
+                }
+                await _db.SaveChangesAsync();
+            }
+        }
+
+        _navigationManager.NavigateTo("inventories");
+    }
+}

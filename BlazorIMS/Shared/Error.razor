@@ -1,0 +1,11 @@
+﻿@page "/error"
+
+<PageTitle>@_title</PageTitle>
+<h3 class="bg-primary text-white text-center p-1">@_title</h3>
+
+<h2 class="text-danger">Error.</h2>
+<h3 class="text-danger">An error occurred while processing your request</h3>
+
+@code {
+    private string _title = "Error";
+}

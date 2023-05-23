@@ -1,0 +1,14 @@
+﻿@if (Items.Any())
+{
+    <ul class="text-danger">
+        @foreach (var item in Items)
+        {
+            <li>@item</li>
+        }
+    </ul>
+}
+
+@code {
+    [Parameter]
+    public List<string> Items { get; set; } = new();
+}
