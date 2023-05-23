@@ -35,6 +35,11 @@ https://blazorims.azurewebsites.net/
 * Checkout
 * Checkin
 * History
+
+## Tutorial/Resources  
+
+Guide to setup Blazor: https://dotnet.microsoft.com/en-us/learn/aspnet/blazor-tutorial/intro
+
 ---
 
 kourosh.salahshoor-asbagh@knowit.se
