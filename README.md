@@ -35,7 +35,10 @@ https://blazorims.azurewebsites.net/
 * Checkout
 * Checkin
 * History
-
+--------
+##Run this project in the local machine
+1) open command prompt in the project folder and execute the command dotnet run with this server will start.
+2) run the web browser with url https://localhost:7139/
 ---
 ## TODO  
 	
