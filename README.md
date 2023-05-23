@@ -36,6 +36,16 @@ https://blazorims.azurewebsites.net/
 * Checkin
 * History
 
+---
+## TODO  
+	
+1. Checkout request logic - remove request and make a user able to checkout directly via either clicking a request button or scanning a QR code. 
+1. Checked out items: show "Checked out by <email address>" even on user side
+1. Add "Item details" to user view. 
+1. User should be able to add comment (but not change other fields)
+1. MAYBE Color code broken/damaged
+
+---
 ## Tutorial/Resources  
 
 Guide to setup Blazor: https://dotnet.microsoft.com/en-us/learn/aspnet/blazor-tutorial/intro
