@@ -1,4 +1,5 @@
-﻿@page "/qrscanner/{pagetype}/{inventoryId:int}"
+﻿@page "/qrscanner/{pagetype}"
+@page "/qrscanner/{pagetype}/{inventoryId:int}"
 @using ReactorBlazorQRCodeScanner
 @inherits OwningComponentBase<ApplicationDbContext>
 @inject AuditService _auditService
@@ -11,18 +12,33 @@
 <PageTitle>@_title</PageTitle>
 <h1>@_title</h1>
 
-<QRCodeScanner />
+<h3>Please show your Qr Code to the camera</h3>
 
-@*@if (!string.IsNullOrEmpty(_scannedCode))
+@if (InventoryId == 0 && !string.IsNullOrEmpty(_scannedCode))
 {
-    <div class="alert alert-primary" role="alert">
-        @_scannedCode
-    </div>
-}*@
+    if (_inventory != null)
+    {
+        <table class="table table-striped">
+            <tr><td>@_inventory.Id</td></tr>
+            <tr><td>@_inventory.Name</td></tr>
+            <tr><td>@_inventory.Category</td></tr>
+            <tr><td>@_inventory.Location</td></tr>
+        </table>
+
+        <h3>Is this the Inventory you want to @(PageType == "checkin" ? "Checkin" : "Checkout")?</h3>
+        <button class="btn btn-primary" @onclick="@(async () => await onConfirm())">Confirm</button>
+        <button class="btn btn-warning" @onclick="@(async () => await startQRScan())">Scan a new Item</button>
+    }
+
+}
+
+<div class="row text-center">
+    <QRCodeScanner />
+</div>
 
 @code {
     private ApplicationDbContext _db => Service;
-    private string _title = "QR Scanner";
+    private string _title = "QR Scanner ";
 
     [Parameter]
     public int InventoryId { get; set; }
@@ -39,8 +55,22 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        _currentUser = await _currentUserService.GetCurrentUser();
+
+        _title = "QR Scanner ";
         _scannedCode = string.Empty;
-        PageType = PageType!.ToLower();
+        if (!string.IsNullOrEmpty(PageType))
+        {
+            PageType = PageType.ToLower();
+            if (PageType == "checkout")
+            {
+                _title += "Checkout";
+            }
+            else if (PageType == "checkin")
+            {
+                _title += "Checkin";
+            }
+        }
 
         if (InventoryId > 0)
         {
@@ -52,12 +82,7 @@
     {
         if (firstRender)
         {
-            _currentUser = await _currentUserService.GetCurrentUser();
-
-            _onQrCodeScanAction = async (code) => await OnQrCodeScan(code);
-
-            _qrCodeScannerJsInterop = new QRCodeScannerJsInterop(_jS);
-            await _qrCodeScannerJsInterop.Init(_onQrCodeScanAction);
+            await startQRScan();
         }
     }
 
@@ -67,19 +92,27 @@
         {
             _scannedCode = code;
 
-            //StateHasChanged();
-            //Console.WriteLine($"OnQrCodeScan {code}");
-
             await onScannedCode();
             await StopQRScan();
+
+            StateHasChanged();
+
+            if (InventoryId > 0)
+            {
+                _navigationManager.NavigateTo("inventories");
+            }
         }
     }
 
     private async Task onScannedCode()
     {
-        if (PageType == "checkout")
+        if (_inventory == null)
         {
-            if (InventoryId > 0 && _inventory != null)
+            _inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == InventoryId);
+        }
+        else
+        {
+            if (PageType == "checkout")
             {
                 if (_inventory.Id.ToString() == _scannedCode)
                 {
@@ -88,15 +121,9 @@
                     _auditService.ForEdit(inventory, _currentUser!.Id);
 
                     await _db.SaveChangesAsync();
-
-                    _navigationManager.NavigateTo("inventories");
                 }
             }
-        }
-        
-        if (PageType == "checkin")
-        {
-            if (InventoryId > 0 && _inventory != null)
+            else if (PageType == "checkin")
             {
                 if (_inventory.Id.ToString() == _scannedCode)
                 {
@@ -105,16 +132,51 @@
                     _auditService.ForEdit(inventory, _currentUser!.Id);
 
                     await _db.SaveChangesAsync();
-
-                    _navigationManager.NavigateTo("inventories");
                 }
             }
+        }        
+    }
+
+    private async Task startQRScan()
+    {
+        if (InventoryId == 0)
+        {
+            _scannedCode = string.Empty;
+            _inventory = null;
         }
+
+        _onQrCodeScanAction = async (code) => await OnQrCodeScan(code);
+
+        _qrCodeScannerJsInterop = new QRCodeScannerJsInterop(_jS);
+        await _qrCodeScannerJsInterop.Init(_onQrCodeScanAction);
     }
 
     protected async Task StopQRScan()
     {
         await _qrCodeScannerJsInterop!.StopRecording();
+    }
+
+    private async Task onConfirm()
+    {
+        var inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _inventory!.Id);
+
+        if (inventory != null)
+        {
+            if (PageType == "checkout")
+            {
+                inventory!.Status = InventoryStatus.CheckedOut;
+            }
+            else if (PageType == "checkin")
+            {
+                inventory!.Status = InventoryStatus.Available;
+            }
+
+            _auditService.ForEdit(inventory, _currentUser!.Id);
+            await _db.SaveChangesAsync();
+
+            _navigationManager.NavigateTo("inventories");
+        }
+
     }
 
 }

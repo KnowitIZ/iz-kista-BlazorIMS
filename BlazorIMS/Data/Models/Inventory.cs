@@ -12,7 +12,7 @@ namespace BlazorIMS.Data
         [Required(ErrorMessage = "Please enter a {0}")]
         public string Location { get; set; } = string.Empty;
         public InventoryStatus Status { get; set; } = InventoryStatus.Available;
-        [Required(ErrorMessage = "Please enter a {0}")]
+        //[Required(ErrorMessage = "Please enter a {0}")]
         public string Description { get; set; } = string.Empty;
         public string? DataSheet { get; set; } = string.Empty;
 

@@ -75,7 +75,7 @@ else
             {
                 @foreach (var item in _items)
                 {
-                    <tr class="@(item.Model.Status == InventoryStatus.CheckedOut ? "table-danger" :"")">
+                    <tr class="@setBackground(item.Model.Status)">
                         <td>@item.Model.Id</td>
                         <td>@item.Model.Name</td>
                         <td>@item.Model.Category</td>
@@ -85,7 +85,7 @@ else
                         <td>@(item.Model.Status == InventoryStatus.CheckedOut ? item.Model.LastModifiedBy!.UserName : "")</td>
                         <AuthorizeView Roles="Admins">
                             <Authorized>
-                                <td>
+                                <td @onclick="@(() => showQrModal(item.Model.Id.ToString()))">
                                     <img src="@(item.QRCode)" width="100" height="100" title="@item.Model.Id.ToString()" />
                                 </td>
                                 <td>
@@ -290,6 +290,25 @@ else
         {
             await search();
         }
+    }
+
+    private void showQrModal(string id)
+    {
+        _qrModal!.Show(id);
+    }
+
+    private string setBackground(InventoryStatus status)
+    {
+        string result = string.Empty;
+        if (status == InventoryStatus.CheckedOut)
+        {
+            result = "table-warning";
+        }
+        else if (status == InventoryStatus.Broken)
+        {
+            result = "table-danger";
+        }
+        return result;
     }
 
     private class pageViewModel

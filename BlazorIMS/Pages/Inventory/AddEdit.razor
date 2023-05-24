@@ -40,11 +40,17 @@
     </div>
     <div class="form-group">
         <label>Status</label>
-        <input class="form-control" disabled value="@_model.Status.ToString()" />
+        <InputSelect class="form-select" @bind-Value="_model.Status">
+            @foreach (var item in Enum.GetValues(typeof(InventoryStatus)).Cast<InventoryStatus>())
+            {
+                <option value="@item">@item.ToString()</option>
+            }
+        </InputSelect>
     </div>
     <div class="form-group">
         <label>Description</label>
-        <InputTextArea class="form-control" @bind-Value="_model.Description" />
+        <textarea class="form-control" disabled value="_model.Description" />
+        @*<InputTextArea class="form-control" @bind-Value="_model.Description" />*@
         <ValidationMessage For="@(() => _model.Description)" />
     </div>
     <div class="form-group">
@@ -79,10 +85,10 @@
     [Parameter]
     public long Id { get; set; } = 0;
 
-    private Inventory _model { get; set; } = new();
+    private Inventory _model { get; set; } = new ();
     private string _title = string.Empty;
     private IdentityUser _currentUser;
-    private int _quantity;
+    private int _quantity = 1;
     private List<string> _errors = new();
 
     protected override async Task OnInitializedAsync()
@@ -125,7 +131,9 @@
                     model.Name = _model.Name;
                     model.Category = _model.Category;
                     model.Location = _model.Location;
+                    model.Status = _model.Status;
                     model.Description = _model.Description;
+                    model.DataSheet = _model.DataSheet;
                     model.Supplier = _model.Supplier;
                     model.Comment = _model.Comment;
 
