@@ -48,8 +48,8 @@
             <th>Name</th>
             <th>Category</th>
             <th>Location</th>
-            <th>Status</th>
             <th>Description</th>
+            <th>Status</th>
             <th>Checked Out By</th>
             <AuthorizeView Roles="Admins">
                 <Authorized>
@@ -57,7 +57,7 @@
                     <th><NavLink class="btn btn-primary btn-sm" href="/inventory/create">Create</NavLink></th>
                 </Authorized>
             </AuthorizeView>
-            <th style="width:1px"></th>
+            <th style="width:155px"></th>
         </tr>
     </thead>
     <tbody>
@@ -70,8 +70,8 @@
                     <td>@item.Name</td>
                     <td>@item.Category</td>
                     <td>@item.Location</td>
-                    <td>@item.Status.ToString()</td>
                     <td>@item.Description</td>
+                    <td>@item.Status.ToString()</td>
                     <td>@(item.Status == InventoryStatus.CheckedOut ? item.LastModifiedBy!.UserName : "")</td>
                     <AuthorizeView Roles="Admins">
                         <Authorized>
@@ -79,7 +79,6 @@
                                 <img src="@_qrCodeGeneratorService.Genereate(item.Id.ToString())" width="100" height="100" title="@item.Id.ToString()" />
                             </td>
                             <td>
-                                <NavLink class="btn btn-info btn-sm" href="@($"/inventory/{item.Id}")">Details</NavLink>
                                 <NavLink class="btn btn-warning btn-sm" href="@($"/inventory/edit/{item.Id}")">Edit</NavLink>
                                 <button class="btn btn-danger btn-sm" @onclick="@(async () => await delete(item.Id))">Delete</button>
                                 <button class="btn btn-light btn-sm" @onclick="@(async () => await clone(item))">Clone</button>
@@ -87,6 +86,7 @@
                         </Authorized>
                     </AuthorizeView>
                     <td>
+                        <NavLink class="btn btn-info btn-sm mx-1" href="@($"/inventory/{item.Id}")">Details</NavLink>
                         @if (item.Status == InventoryStatus.Available)
                         {
                             <a class="btn btn-sm btn-success" href="/qrscanner/checkout/@item.Id">Checkout</a>
@@ -138,8 +138,6 @@
 
         _categories = await _db.Inventories.Select(x => x.Category).Distinct().ToListAsync();
         _locations = await _db.Inventories.Select(x => x.Location).Distinct().ToListAsync();
-
-        //await load();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -149,18 +147,25 @@
 
     private async Task load()
     {
-        var query = getQuery();
+        var query = await getQuery();
         _items = await query.OrderByDescending(x => x.Id).ToListAsync();
     }
 
-    private IQueryable<Inventory> getQuery()
+    private async Task<IQueryable<Inventory>> getQuery()
     {
-        var query = _db.Inventories.Include(x=>x.LastModifiedBy).AsQueryable();
+        var query = _db.Inventories.Include(x => x.LastModifiedBy).AsQueryable();
         if (!string.IsNullOrEmpty(PageType))
         {
             if (PageType.ToLower() == "checkouts")
             {
-                query = query.Where(x => x.LastModifiedById == _currentUser!.Id && x.Status == InventoryStatus.CheckedOut);
+                if (await _currentUserService.IsInRole("Admins"))
+                {
+                    query = query.Where(x => x.Status == InventoryStatus.CheckedOut);
+                }
+                else
+                {
+                    query = query.Where(x => x.LastModifiedById == _currentUser!.Id && x.Status == InventoryStatus.CheckedOut);
+                }
             }
         }
         return query;
@@ -168,12 +173,12 @@
 
     private async Task search()
     {
-        var query = getQuery();
+        var query = await getQuery();
         if (!string.IsNullOrEmpty(_searchText))
         {
             _searchText = _searchText.ToLower();
-            query = query.Where(x => 
-                x.Name.ToLower().Contains(_searchText) || 
+            query = query.Where(x =>
+                x.Name.ToLower().Contains(_searchText) ||
                 x.Description.ToLower().Contains(_searchText) ||
                 x.Comment!.ToLower().Contains(_searchText) ||
                 x.DataSheet!.ToLower().Contains(_searchText) ||

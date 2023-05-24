@@ -71,6 +71,7 @@
     private int maxAllowedFiles = 1;
     private bool isLoading;
     private List<ExcelViewModel> _items = new();
+    private string _fileName = string.Empty;
 
     private async Task LoadFiles(InputFileChangeEventArgs e)
     {
@@ -86,7 +87,9 @@
             {
                 loadedFiles.Add(file);
 
-                path = Path.Combine(Environment.ContentRootPath, "wwwroot", "uploads", "excels", file.Name);
+                _fileName = file.Name;
+
+                path = Path.Combine(Environment.ContentRootPath, "wwwroot", "uploads", "excels", _fileName);
 
                 await using FileStream fs = new(path, FileMode.Create);
                 await file.OpenReadStream().CopyToAsync(fs);
@@ -205,7 +208,7 @@
                     inventory.Location = location;
                     inventory.Description = description;
                     inventory.Comment = item.Comment;
-                    inventory.DataSheet = item.DataSheet;
+                    inventory.DataSheet = string.IsNullOrEmpty(item.DataSheet) ? _fileName : item.DataSheet;
 
                     _auditService.ForCreate(inventory, currentUser.Id);
 
