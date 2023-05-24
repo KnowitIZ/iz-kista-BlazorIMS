@@ -1,5 +1,5 @@
 ﻿@page "/readexcel"
-@attribute [Authorize(Roles ="Admins")]
+@attribute [Authorize(Roles = "Admins")]
 @inherits OwningComponentBase<ApplicationDbContext>
 
 @using System
@@ -20,7 +20,7 @@
 <h3>Upload Files</h3>
 <p>
     <label>
-        <InputFile OnChange="@LoadFiles" single />
+        <InputFile OnChange="LoadFiles" single />
     </label>
 </p>
 
@@ -37,15 +37,12 @@
             <tr>
                 <th scope="col">#</th>
                 <th scope="col">Name</th>
-                <th scope="col">Supplier</th>
-                <th scope="col">Desc</th>
                 <th scope="col">Quantity</th>
-                <th scope="col">Storage Place</th>
+                <th scope="col">Category</th>
+                <th scope="col">Location</th>
+                <th scope="col">Description</th>
                 <th scope="col">Comment</th>
-                <th scope="col">CheckedOut Quantity</th>
-                <th scope="col">CheckedOut By Email</th>
-                <th scope="col">CheckedOut For Project</th>
-                <th scope="col">CheckedOut Date</th>
+                <th scope="col">Data Sheet</th>
             </tr>
         </thead>
         <tbody>
@@ -54,18 +51,15 @@
                 <tr>
                     <th scope="row">@(row++)</th>
                     <td>@item.Name</td>
-                    <td>@item.Supplier</td>
-                    <td>@item.Desc</td>
                     <td>@item.Quantity</td>
-                    <td>@item.StoragePlace</td>
+                    <td>@item.Category</td>
+                    <td>@item.Location</td>
+                    <td>@item.Description</td>
                     <td>@item.Comment</td>
-                    <td>@item.CheckedOutQuantity</td>
-                    <td>@item.CheckedOutByEmail</td>
-                    <td>@item.CheckedOutForProject</td>
-                    <td>@item.CheckedOutDate</td>
+                    <td>@item.DataSheet</td>
                 </tr>
             }
-            
+
         </tbody>
     </table>
 }
@@ -106,14 +100,14 @@
 
         if (!string.IsNullOrEmpty(path))
         {
-            var list = GetListFromExcel(path, "Others");
+            var list = GetListFromExcel(path, "Sheet1");
             _items = trim(list);
         }
 
         isLoading = false;
     }
 
-    private List<ExcelViewModel> GetListFromExcel(string path, string wsName, int headerRows = 2)
+    private List<ExcelViewModel> GetListFromExcel(string path, string wsName, int headerRows = 1)
     {
         ExcelPackage.LicenseContext = LicenseContext.Commercial;
 
@@ -135,19 +129,19 @@
 
                 col++;
                 value = ws.Cells[row, col].Value;
-                vm.Supplier = value == null ? "" : value.ToString();
-
-                col++;
-                value = ws.Cells[row, col].Value;
-                vm.Desc = value == null ? "" : value.ToString();
-
-                col++;
-                value = ws.Cells[row, col].Value;
                 vm.Quantity = value == null ? "" : value.ToString();
 
                 col++;
                 value = ws.Cells[row, col].Value;
-                vm.StoragePlace = value == null ? "" : value.ToString();
+                vm.Category = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.Location = value == null ? "" : value.ToString();
+
+                col++;
+                value = ws.Cells[row, col].Value;
+                vm.Description = value == null ? "" : value.ToString();
 
                 col++;
                 value = ws.Cells[row, col].Value;
@@ -155,19 +149,7 @@
 
                 col++;
                 value = ws.Cells[row, col].Value;
-                vm.CheckedOutQuantity = value == null ? "" : value.ToString();
-
-                col++;
-                value = ws.Cells[row, col].Value;
-                vm.CheckedOutByEmail = value == null ? "" : value.ToString();
-
-                col++;
-                value = ws.Cells[row, col].Value;
-                vm.CheckedOutForProject = value == null ? "" : value.ToString();
-
-                col++;
-                value = ws.Cells[row, col].Value;
-                vm.CheckedOutDate = value == null ? "" : value.ToString();
+                vm.DataSheet = value == null ? "" : value.ToString();
 
                 vms.Add(vm);
             }
@@ -182,16 +164,13 @@
         foreach (var item in list)
         {
             if (
-                string.IsNullOrEmpty(item.Name) && 
-                string.IsNullOrEmpty(item.Supplier) &&
-                string.IsNullOrEmpty(item.Desc) &&
+                string.IsNullOrEmpty(item.Name) &&
                 string.IsNullOrEmpty(item.Quantity) &&
-                string.IsNullOrEmpty(item.StoragePlace) &&
+                string.IsNullOrEmpty(item.Category) &&
+                string.IsNullOrEmpty(item.Location) &&
+                string.IsNullOrEmpty(item.Description) &&
                 string.IsNullOrEmpty(item.Comment) &&
-                string.IsNullOrEmpty(item.CheckedOutQuantity) &&
-                string.IsNullOrEmpty(item.CheckedOutByEmail) &&
-                string.IsNullOrEmpty(item.CheckedOutForProject) &&
-                string.IsNullOrEmpty(item.CheckedOutDate)
+                string.IsNullOrEmpty(item.DataSheet)
             )
             {
             }
@@ -210,19 +189,23 @@
 
         foreach (var item in _items)
         {
-            var supplier = string.IsNullOrEmpty(item.Supplier) ? "?" : item.Supplier;
-            if (!await _db.Inventories.AnyAsync(x => x.Name == item.Name && x.Supplier == supplier && x.Description == item.Desc))
+            var name = string.IsNullOrEmpty(item.Name) ? "?" : item.Name;
+            var category = string.IsNullOrEmpty(item.Category) ? "?" : item.Category;
+            var location = string.IsNullOrEmpty(item.Location) ? "?" : item.Location;
+            var description = string.IsNullOrEmpty(item.Description) ? "?" : item.Description;
+
+            if (!await _db.Inventories.AnyAsync(x => x.Name == name && x.Category == category && x.Location == location && x.Description == description))
             {
                 int quantity = string.IsNullOrEmpty(item.Quantity) ? 1 : int.Parse(item.Quantity);
                 for (int i = 1; i <= quantity; i++)
                 {
                     var inventory = new Inventory();
-                    inventory.Name = item.Name!;
-                    inventory.Category = "?";
-                    inventory.Location = string.IsNullOrEmpty(item.StoragePlace) ? "?" : item.StoragePlace;
-                    inventory.Supplier = supplier;
-                    inventory.Description = item.Desc!;
+                    inventory.Name = name;
+                    inventory.Category = category;
+                    inventory.Location = location;
+                    inventory.Description = description;
                     inventory.Comment = item.Comment;
+                    inventory.DataSheet = item.DataSheet;
 
                     _auditService.ForCreate(inventory, currentUser.Id);
 
