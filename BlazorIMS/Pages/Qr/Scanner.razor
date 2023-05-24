@@ -1,12 +1,10 @@
-﻿@page "/qrscanner/checkout/{checkoutRequestId:int}"
-@page "/qrscanner/checkin/{checkoutId:int}"
+﻿@page "/qrscanner/{pagetype}/{inventoryId:int}"
 @using ReactorBlazorQRCodeScanner
 @inherits OwningComponentBase<ApplicationDbContext>
 @inject AuditService _auditService
 @inject CurrentUserService _currentUserService
 @inject NavigationManager _navigationManager
 @inject IJSRuntime _jS
-@attribute [Authorize(Roles = "Admins")]
 @*https://www.nuget.org/packages/ReactorBlazorQRCodeScanner/*@
 @*https://github.com/YannVasseur35/ReactorBlazorQRCodeScanner*@
 
@@ -27,9 +25,9 @@
     private string _title = "QR Scanner";
 
     [Parameter]
-    public int CheckoutRequestId { get; set; }
+    public int InventoryId { get; set; }
     [Parameter]
-    public int CheckoutId { get; set; }
+    public string? PageType { get; set; }
 
     private QRCodeScannerJsInterop? _qrCodeScannerJsInterop;
     private Action<string>? _onQrCodeScanAction;
@@ -37,21 +35,16 @@
 
     private IdentityUser? _currentUser;
 
-    private CheckoutRequest? _checkoutRequest = null;
-    private Checkout? _checkout = null;
+    private Inventory? _inventory = null;
 
     protected override async Task OnParametersSetAsync()
     {
         _scannedCode = string.Empty;
+        PageType = PageType!.ToLower();
 
-        if (CheckoutRequestId > 0)
+        if (InventoryId > 0)
         {
-            _checkoutRequest = await _db.CheckoutRequests.FirstOrDefaultAsync(x => x.Id == CheckoutRequestId);
-        }
-
-        if (CheckoutId > 0)
-        {
-            _checkout = await _db.Checkouts.FirstOrDefaultAsync(x => x.Id == CheckoutId);
+            _inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == InventoryId);
         }
     }
 
@@ -79,46 +72,42 @@
 
             await onScannedCode();
             await StopQRScan();
-
         }
     }
 
     private async Task onScannedCode()
     {
-        if (CheckoutRequestId > 0 && _checkoutRequest != null)
+        if (PageType == "checkout")
         {
-            if (_checkoutRequest.InventoryId.ToString() == _scannedCode)
+            if (InventoryId > 0 && _inventory != null)
             {
-                var itemsToDelete = await _db.CheckoutRequests.Where(x => x.InventoryId == _checkoutRequest.InventoryId).ToListAsync();
-                _db.RemoveRange(itemsToDelete);
+                if (_inventory.Id.ToString() == _scannedCode)
+                {
+                    var inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _inventory.Id);
+                    inventory!.Status = InventoryStatus.CheckedOut;
+                    _auditService.ForEdit(inventory, _currentUser!.Id);
 
-                var checkout = new Checkout();
-                checkout.InventoryId = _checkoutRequest.InventoryId;
-                _auditService.ForCreate(checkout, _currentUser!.Id);
-                checkout.CheckedOutById = _checkoutRequest.CreatedById!;
-                await _db.Checkouts.AddAsync(checkout);
+                    await _db.SaveChangesAsync();
 
-                var inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _checkoutRequest.InventoryId);
-                inventory!.Status = InventoryStatus.CheckedOut;
-
-                await _db.SaveChangesAsync();
-
-                _navigationManager.NavigateTo("checkoutrequests");
+                    _navigationManager.NavigateTo("inventories");
+                }
             }
         }
-        else if (CheckoutId > 0 && _checkout != null)
+        
+        if (PageType == "checkin")
         {
-            if (_checkout.InventoryId.ToString() == _scannedCode)
+            if (InventoryId > 0 && _inventory != null)
             {
-                var itemToDelete = await _db.Checkouts.Where(x => x.InventoryId == _checkout.InventoryId).ToListAsync();
-                _db.RemoveRange(itemToDelete);
+                if (_inventory.Id.ToString() == _scannedCode)
+                {
+                    var inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _inventory.Id);
+                    inventory!.Status = InventoryStatus.Available;
+                    _auditService.ForEdit(inventory, _currentUser!.Id);
 
-                var inventory = await _db.Inventories.FirstOrDefaultAsync(x => x.Id == _checkout.InventoryId);
-                inventory!.Status = InventoryStatus.Available;
+                    await _db.SaveChangesAsync();
 
-                await _db.SaveChangesAsync();
-
-                _navigationManager.NavigateTo("checkouts");
+                    _navigationManager.NavigateTo("inventories");
+                }
             }
         }
     }

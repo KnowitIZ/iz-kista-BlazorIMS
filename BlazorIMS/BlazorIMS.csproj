@@ -9,12 +9,20 @@
 
   <ItemGroup>
     <Compile Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <Compile Remove="Pages\CheckoutRequests\**" />
+    <Compile Remove="Pages\Checkouts\**" />
     <Compile Remove="Pages\Products\**" />
     <Content Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <Content Remove="Pages\CheckoutRequests\**" />
+    <Content Remove="Pages\Checkouts\**" />
     <Content Remove="Pages\Products\**" />
     <EmbeddedResource Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <EmbeddedResource Remove="Pages\CheckoutRequests\**" />
+    <EmbeddedResource Remove="Pages\Checkouts\**" />
     <EmbeddedResource Remove="Pages\Products\**" />
     <None Remove="Areas\Identity\Pages\Account\Manage\**" />
+    <None Remove="Pages\CheckoutRequests\**" />
+    <None Remove="Pages\Checkouts\**" />
     <None Remove="Pages\Products\**" />
   </ItemGroup>
 

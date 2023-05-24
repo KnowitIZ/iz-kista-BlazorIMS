@@ -1,4 +1,5 @@
 ﻿@page "/inventories"
+@page "/inventories/{pagetype}"
 
 @inherits OwningComponentBase<ApplicationDbContext>
 @inject IJSRuntime _js
@@ -55,11 +56,7 @@
                     <th><NavLink class="btn btn-primary btn-sm" href="/inventory/create">Create</NavLink></th>
                 </Authorized>
             </AuthorizeView>
-            <AuthorizeView Roles="Employees">
-                <Authorized>
-                    <th style="width:199px"></th>
-                </Authorized>
-            </AuthorizeView>
+            <th style="width:1px"></th>
         </tr>
     </thead>
     <tbody>
@@ -87,30 +84,24 @@
                             </td>
                         </Authorized>
                     </AuthorizeView>
-                    <AuthorizeView Roles="Employees">
-                        <Authorized>
-                            <th>
-                                @if (item.Status == InventoryStatus.Available)
-                                {
-                                    if (_checkoutRequestIds.Contains(item.Id))
-                                    {
-                                        <button class="btn btn-danger btn-sm" @onclick="@(async () => await toggleCheckoutRequest(item.Id))">Remove Checkout Request</button>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-primary btn-sm" @onclick="@(async () => await toggleCheckoutRequest(item.Id))">Checkout Request</button>
-                                    }
-                                }
-                            </th>
-                        </Authorized>
-                    </AuthorizeView>
+                    <td>
+                        @if (item.Status == InventoryStatus.Available)
+                        {
+                            <a class="btn btn-sm btn-success" href="/qrscanner/checkout/@item.Id">Checkout</a>
+                        }
+
+                        @if (item.Status == InventoryStatus.CheckedOut && item.LastModifiedById == _currentUser!.Id)
+                        {
+                            <a class="btn btn-sm btn-warning" href="/qrscanner/checkin/@item.Id">Checkin</a>
+                        }
+                    </td>
                 </tr>
             }
         }
         else
         {
             <tr>
-                <td colspan="8" class="text-center">No Inventories</td>
+                <td colspan="9" class="text-center">No Inventories</td>
             </tr>
         }
     </tbody>
@@ -123,6 +114,9 @@
     private List<Inventory> _items { get; set; } = new();
     private string _title = "Inventories";
 
+    [Parameter]
+    public string? PageType { get; set; }
+
     private List<string> _categories = new();
     private List<string> _locations = new();
     private string _searchText = string.Empty;
@@ -134,7 +128,6 @@
 
     private IdentityUser? _currentUser;
     private ClaimsPrincipal? _claimsPrinciple;
-    private List<int> _checkoutRequestIds = new();
 
     protected async override Task OnInitializedAsync()
     {
@@ -144,25 +137,36 @@
         _categories = await _db.Inventories.Select(x => x.Category).Distinct().ToListAsync();
         _locations = await _db.Inventories.Select(x => x.Location).Distinct().ToListAsync();
 
+        //await load();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
         await load();
     }
 
     private async Task load()
     {
-        if (_claimsPrinciple!.IsInRole("Employees"))
+        var query = getQuery();
+        _items = await query.OrderByDescending(x => x.Id).ToListAsync();
+    }
+
+    private IQueryable<Inventory> getQuery()
+    {
+        var query = _db.Inventories.AsQueryable();
+        if (!string.IsNullOrEmpty(PageType))
         {
-            _checkoutRequestIds = await _db.CheckoutRequests.Where(x => x.CreatedById == _currentUser!.Id).Select(x => x.InventoryId).ToListAsync();
+            if (PageType.ToLower() == "checkouts")
+            {
+                query = query.Where(x => x.LastModifiedById == _currentUser!.Id && x.Status == InventoryStatus.CheckedOut);
+            }
         }
-        else if (_claimsPrinciple!.IsInRole("Admins"))
-        {
-            _checkoutRequestIds = await _db.CheckoutRequests.Select(x => x.InventoryId).ToListAsync();
-        }
-        _items = await _db.Inventories.OrderByDescending(x => x.Id).ToListAsync();
+        return query;
     }
 
     private async Task search()
     {
-        var query = _db.Inventories.AsQueryable();
+        var query = getQuery();
         if (!string.IsNullOrEmpty(_searchText))
         {
             _searchText = _searchText.ToLower();
@@ -184,7 +188,7 @@
             query = query.Where(x => x.Status == _selectedStatus).AsQueryable();
         }
 
-        _items = await query.OrderByDescending(x=> x.Id).ToListAsync();
+        _items = await query.OrderByDescending(x => x.Id).ToListAsync();
     }
     private async Task reset()
     {
@@ -209,27 +213,6 @@
                 await load();
             }
         }
-    }
-
-    private async Task toggleCheckoutRequest(int inventoryId)
-    {
-        var cr = await _db.CheckoutRequests.FirstOrDefaultAsync(x => x.CreatedById == _currentUser!.Id && x.InventoryId == inventoryId);
-        if (cr == null)
-        {
-            cr = new CheckoutRequest();
-            cr.InventoryId = inventoryId;
-            _auditService.ForCreate(cr, _currentUser!.Id);
-
-            _db.CheckoutRequests.Add(cr);
-        }
-        else
-        {
-            _db.CheckoutRequests.Remove(cr);
-        }
-
-        await _db.SaveChangesAsync();
-
-        await load();
     }
 
     private async Task clone(Inventory item)

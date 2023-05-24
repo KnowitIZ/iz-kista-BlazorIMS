@@ -12,8 +12,6 @@ namespace BlazorIMS.Data
         }
 
         public DbSet<Inventory> Inventories => Set<Inventory>();
-        public DbSet<CheckoutRequest> CheckoutRequests => Set<CheckoutRequest>();
-        public DbSet<Checkout> Checkouts => Set<Checkout>();
         public DbSet<InventoryHistory> InventoryHistories => Set<InventoryHistory>();
 
     }
