@@ -16,9 +16,15 @@ https://blazorims.azurewebsites.net/
 
 ---
 
-## To run
+## Quick Start  
+### Prerequisites  
 1. [Copy the code](https://github.com/KnowitIZ/BlazorIMS/archive/refs/heads/master.zip)
-2. Download & Install [Visual Studio 2022 Community edition](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022&source=VSLandingPage&passive=false&cid=2030)
+1. Download & Install [Visual Studio 2022 Community edition](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community&channel=Release&version=VS2022&source=VSLandingPage&passive=false&cid=2030)
+
+### To run
+1. Open command prompt in the project folder BlazorIMS and run the command ```dotnet run``` and this will start the server. 
+1. Open the website in a browser with url ```https://localhost:7139/``` 
+
 
 ---
 ## What the program does
@@ -35,24 +41,33 @@ https://blazorims.azurewebsites.net/
 * Checkout
 * Checkin
 * History
---------
-##Run this project in the local machine
-1) open command prompt in the project folder and execute the command dotnet run with this server will start.
-2) run the web browser with url https://localhost:7139/
+
 ---
 ## TODO  
 	
+### Done  
 1. Checkout request logic - remove request and make a user able to checkout directly via either clicking a request button or scanning a QR code. 
 1. Checked out items: show "Checked out by <email address>" even on user side
 1. Add "Item details" to user view. 
 1. User should be able to add comment (but not change other fields)
-1. MAYBE Color code broken/damaged
+
+	
+### To Do  
+1. Search on enter  
+1. Users edit possibilities on items should only be on comment.
+1. If checked out, it should show in the details of the item as well.
+1. Searching "2y0" results in error, searching in general. 
+1. New feature: "Separate" QR code scanner that takes you to the correct item for both check in and check out. (e.g. you do not have to have selected the correct tiem to checkout or check in, instead it takes the QR code and maybe prompts a confirmation with the name. )
+1. Camera window in phone mode is larger than the window.
+1. Color code broken/damaged
+
 
 ---
 ## Tutorial/Resources  
 
 Guide to setup Blazor: https://dotnet.microsoft.com/en-us/learn/aspnet/blazor-tutorial/intro
-
+Good book to learn Blazor: Pro ASP.NET Core 6 by Adam Freeman
+	
 ---
 
 kourosh.salahshoor-asbagh@knowit.se
