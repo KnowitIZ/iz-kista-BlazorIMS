@@ -43,6 +43,8 @@
     <Compile Remove="Areas\Identity\Pages\Account\ResendEmailConfirmation.cshtml.cs" />
     <Compile Remove="Areas\Identity\Pages\Account\ResetPassword.cshtml.cs" />
     <Compile Remove="Areas\Identity\Pages\Account\ResetPasswordConfirmation.cshtml.cs" />
+    <Compile Remove="Data\Models\Checkout.cs" />
+    <Compile Remove="Data\Models\CheckoutRequest.cs" />
     <Compile Remove="Data\Models\Product.cs" />
   </ItemGroup>
 

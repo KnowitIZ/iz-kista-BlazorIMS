@@ -13,7 +13,7 @@
 
 <div class="row mb-3">
     <div class="input-group g-3">
-        <input class="form-control" placeholder="Text" @bind="@_searchText" />
+        <input class="form-control" placeholder="Free Text Search..." @bind="@_searchText" />
         <select class="form-select" @bind="@_selectedCategory">
             <option value="" selected>Category</option>
             @foreach (var item in _categories)
@@ -50,6 +50,7 @@
             <th>Location</th>
             <th>Status</th>
             <th>Description</th>
+            <th>Checked Out By</th>
             <AuthorizeView Roles="Admins">
                 <Authorized>
                     <th>QR Code</th>
@@ -71,6 +72,7 @@
                     <td>@item.Location</td>
                     <td>@item.Status.ToString()</td>
                     <td>@item.Description</td>
+                    <td>@(item.Status == InventoryStatus.CheckedOut ? item.LastModifiedBy!.UserName : "")</td>
                     <AuthorizeView Roles="Admins">
                         <Authorized>
                             <td @onclick="@(() => {_qrModal!.Show(item.Id.ToString());})">
@@ -153,7 +155,7 @@
 
     private IQueryable<Inventory> getQuery()
     {
-        var query = _db.Inventories.AsQueryable();
+        var query = _db.Inventories.Include(x=>x.LastModifiedBy).AsQueryable();
         if (!string.IsNullOrEmpty(PageType))
         {
             if (PageType.ToLower() == "checkouts")
@@ -170,7 +172,17 @@
         if (!string.IsNullOrEmpty(_searchText))
         {
             _searchText = _searchText.ToLower();
-            query = query.Where(x => x.Name.ToLower().Contains(_searchText) || x.Description.ToLower().Contains(_searchText)).AsQueryable();
+            query = query.Where(x => 
+                x.Name.ToLower().Contains(_searchText) || 
+                x.Description.ToLower().Contains(_searchText) ||
+                x.Comment!.ToLower().Contains(_searchText) ||
+                x.DataSheet!.ToLower().Contains(_searchText) ||
+                x.Supplier!.ToLower().Contains(_searchText) ||
+                x.Location.ToLower().Contains(_searchText) ||
+                x.Category.ToLower().Contains(_searchText) ||
+                x.Status.ToString().ToLower().Contains(_searchText) ||
+                (x.Status == InventoryStatus.CheckedOut && x.LastModifiedBy!.UserName.ToLower().Contains(_searchText))
+            ).AsQueryable();
         }
 
         if (!string.IsNullOrEmpty(_selectedCategory))

@@ -17,7 +17,6 @@ namespace BlazorIMS.Data
         public string? DataSheet { get; set; } = string.Empty;
 
         public string? Supplier { get; set; } = string.Empty;
-        public int QuantityCheckedOut { get; set; }
         public string? Comment { get; set; } = string.Empty;
 
     }
