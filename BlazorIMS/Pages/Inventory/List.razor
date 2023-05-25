@@ -11,9 +11,11 @@
 <PageTitle>@_title</PageTitle>
 <h3>@_title</h3>
 
-<div class="row mb-3">
-    <div class="input-group g-3">
-        <input class="form-control" placeholder="Free Text Search..." @bind="@_searchText" @bind:event="oninput" @onkeydown="onEnter" />
+<div class="row g-3 mb-3">
+    <div class="col-md-2">
+        <input class="form-control" placeholder="Free Text Search..." @bind="@_searchText" @bind:event="oninput" @onkeydown="onEnter" />        
+    </div>
+    <div class="col-md-2">
         <select class="form-select" @bind="@_selectedCategory">
             <option value="" selected>Category</option>
             @foreach (var item in _categories)
@@ -21,6 +23,8 @@
                 <option value="@item">@item</option>
             }
         </select>
+    </div>
+    <div class="col-md-2">
         <select class="form-select" @bind="@_selectedLocation">
             <option value="" selected>Location</option>
             @foreach (var item in _locations)
@@ -28,14 +32,18 @@
                 <option value="@item">@item</option>
             }
         </select>
+    </div>
+    <div class="col-md-2">
         <select class="form-select" @bind="@_selectedStatus">
             <option value="" selected>Status</option>
             <option value="@InventoryStatus.Available">@InventoryStatus.Available.ToString()</option>
             <option value="@InventoryStatus.CheckedOut">@InventoryStatus.CheckedOut.ToString()</option>
         </select>
+    </div>
+    <div class="col-md-2">
         <div>
-            <button class="btn btn-light" @onclick="reset" title="Reset"><span class="oi oi-circle-x" aria-hidden="true"></span> Reset</button>
-            <button class="btn btn-warning" @onclick="search" title="Search"><span class="oi oi-magnifying-glass" aria-hidden="true"></span> Search</button>
+            <button class="btn btn-light mx-1" @onclick="reset" title="Reset"><span class="oi oi-circle-x" aria-hidden="true"></span> Reset</button>
+            <button class="btn btn-warning mx-1" @onclick="search" title="Search"><span class="oi oi-magnifying-glass" aria-hidden="true"></span> Search</button>
         </div>
     </div>
 </div>
@@ -50,74 +58,75 @@
 }
 else
 {
-    <table class="table table-sm table-striped table-bordered table-hover caption-top">
-        <caption>Number of Items: @_items.Count()</caption>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Location</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Checked Out By</th>
-                <AuthorizeView Roles="Admins">
-                    <Authorized>
-                        <th>QR Code</th>
-                        <th><NavLink class="btn btn-primary btn-sm" href="/inventory/create">Create</NavLink></th>
-                    </Authorized>
-                </AuthorizeView>
-                <th style="width:155px"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @if (_items.Any())
-            {
-                @foreach (var item in _items)
+    <div class="table-responsive">
+        <table class="table table-sm table-striped table-bordered table-hover caption-top">
+            <caption>Number of Items: @_items.Count()</caption>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Checked Out By</th>
+                    <AuthorizeView Roles="Admins">
+                        <Authorized>
+                            <th>QR Code</th>
+                            <th><NavLink class="btn btn-primary btn-sm" href="/inventory/create">Create</NavLink></th>
+                        </Authorized>
+                    </AuthorizeView>
+                    <th style="width:163px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_items.Any())
                 {
-                    <tr class="@setBackground(item.Model.Status)">
-                        <td>@item.Model.Id</td>
-                        <td>@item.Model.Name</td>
-                        <td>@item.Model.Category</td>
-                        <td>@item.Model.Location</td>
-                        <td>@item.Model.Description</td>
-                        <td>@item.Model.Status.ToString()</td>
-                        <td>@(item.Model.Status == InventoryStatus.CheckedOut ? item.Model.LastModifiedBy!.UserName : "")</td>
-                        <AuthorizeView Roles="Admins">
-                            <Authorized>
-                                <td @onclick="@(() => showQrModal(item.Model.Id.ToString()))">
-                                    <img src="@(item.QRCode)" width="100" height="100" title="@item.Model.Id.ToString()" />
-                                </td>
-                                <td>
-                                    <NavLink class="btn btn-warning btn-sm" href="@($"/inventory/edit/{item.Model.Id}")">Edit</NavLink>
-                                    <button class="btn btn-danger btn-sm" @onclick="@(async () => await delete(item.Model.Id))">Delete</button>
-                                    <button class="btn btn-light btn-sm" @onclick="@(async () => await clone(item.Model))">Clone</button>
-                                </td>
-                            </Authorized>
-                        </AuthorizeView>
-                        <td>
-                            <NavLink class="btn btn-info btn-sm mx-1" href="@($"/inventory/{item.Model.Id}")">Details</NavLink>
-                            @if (item.Model.Status == InventoryStatus.Available)
-                            {
-                                <a class="btn btn-sm btn-success" href="/qrscanner/checkout/@item.Model.Id">Checkout</a>
-                            }
-
-                            @if (item.Model.Status == InventoryStatus.CheckedOut && item.Model.LastModifiedById == _currentUser!.Id)
-                            {
-                                <a class="btn btn-sm btn-warning" href="/qrscanner/checkin/@item.Model.Id">Checkin</a>
-                            }
-                        </td>
+                    @foreach (var item in _items)
+                    {
+                        <tr class="@setBackground(item.Model.Status)">
+                            <td>@item.Model.Id</td>
+                            <td>@item.Model.Name</td>
+                            <td>@item.Model.Category</td>
+                            <td>@item.Model.Location</td>
+                            <td>@item.Model.Description</td>
+                            <td>@item.Model.Status.ToString()</td>
+                            <td>@(item.Model.Status == InventoryStatus.CheckedOut ? item.Model.LastModifiedBy!.UserName : "")</td>
+                            <AuthorizeView Roles="Admins">
+                                <Authorized>
+                                    <td @onclick="@(() => showQrModal(item.Model.Id.ToString()))">
+                                        <img src="@(item.QRCode)" width="100" height="100" title="@item.Model.Id.ToString()" />
+                                    </td>
+                                    <td>
+                                        <NavLink class="btn btn-warning btn-sm m-1" href="@($"/inventory/edit/{item.Model.Id}")">Edit</NavLink>
+                                        <button class="btn btn-danger btn-sm m-1" @onclick="@(async () => await delete(item.Model.Id))">Delete</button>
+                                        <button class="btn btn-light btn-sm m-1" @onclick="@(async () => await clone(item.Model))">Clone</button>
+                                    </td>
+                                </Authorized>
+                            </AuthorizeView>
+                            <td>
+                                <NavLink class="btn btn-info btn-sm m-1" href="@($"/inventory/{item.Model.Id}")">Details</NavLink>
+                                @if (item.Model.Status == InventoryStatus.Available)
+                                {
+                                    <a class="btn btn-sm btn-success m-1" href="/qrscanner/checkout/@item.Model.Id">Checkout</a>
+                                }
+                                else if (item.Model.Status == InventoryStatus.CheckedOut && item.Model.LastModifiedById == _currentUser!.Id)
+                                {
+                                    <a class="btn btn-sm btn-warning m-1" href="/qrscanner/checkin/@item.Model.Id">Checkin</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center">No Inventories</td>
                     </tr>
                 }
-            }
-            else
-            {
-                <tr>
-                    <td colspan="9" class="text-center">No Inventories</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 }
 
 <BlazorIMS.Pages.Qr.Details @ref="_qrModal" />
@@ -218,17 +227,16 @@ else
             _searchText = _searchText.ToLower();
 
             query = query.Where(x =>
-                (string.IsNullOrEmpty(x.Name) || x.Name.ToLower().Contains(_searchText))
-                ||
-                (string.IsNullOrEmpty(x.Description) || x.Description.ToLower().Contains(_searchText))
-            //||
-            //(string.IsNullOrEmpty(x.Comment) || x.Comment!.ToLower().Contains(_searchText)) ||
-            //(string.IsNullOrEmpty(x.DataSheet) || x.DataSheet!.ToLower().Contains(_searchText)) ||
-            //(string.IsNullOrEmpty(x.Supplier) || x.Supplier!.ToLower().Contains(_searchText)) ||
-            //(string.IsNullOrEmpty(x.Location) || x.Location.ToLower().Contains(_searchText)) ||
-            //(string.IsNullOrEmpty(x.Category) || x.Category.ToLower().Contains(_searchText)) ||
-            //x.Status.ToString().ToLower().Contains(_searchText) ||
-            //(x.Status == InventoryStatus.CheckedOut && x.LastModifiedBy!.UserName.ToLower().Contains(_searchText))
+                (x.Id.ToString().Contains(_searchText)) ||
+                (!string.IsNullOrEmpty(x.Name) && x.Name.ToLower().Contains(_searchText)) ||
+                (!string.IsNullOrEmpty(x.Category) && x.Category.ToLower().Contains(_searchText)) ||
+                (!string.IsNullOrEmpty(x.Location) && x.Location.ToLower().Contains(_searchText)) ||
+                //x.Status.ToString().ToLower().Contains(_searchText) ||
+                (!string.IsNullOrEmpty(x.Description) && x.Description.ToLower().Contains(_searchText)) ||
+                (!string.IsNullOrEmpty(x.DataSheet) && x.DataSheet!.ToLower().Contains(_searchText)) ||
+                (!string.IsNullOrEmpty(x.Supplier) && x.Supplier!.ToLower().Contains(_searchText)) ||
+                (!string.IsNullOrEmpty(x.Comment) && x.Comment!.ToLower().Contains(_searchText)) ||
+                (x.Status == InventoryStatus.CheckedOut && x.LastModifiedBy!.UserName.ToLower().Contains(_searchText))
             ).AsQueryable();
         }
 

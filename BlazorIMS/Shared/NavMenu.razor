@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject NavigationManager _navigationManager
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">BlazorIMS</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -11,18 +13,28 @@
     <nav class="flex-column">
         <AuthorizeView>
             <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/"))">
+                    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
                         <span class="oi oi-home" aria-hidden="true"></span> Home
                     </NavLink>
                 </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="inventories">
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/inventories"))">
+                    <NavLink class="nav-link" href="/inventories" Match="NavLinkMatch.All">
                         <span class="oi oi-list" aria-hidden="true"></span> Inventory
                     </NavLink>
                 </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="inventories/checkouts" Match="NavLinkMatch.All">
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/qrscanner/checkout"))">
+                    <NavLink class="nav-link" href="/qrscanner/checkout" Match="NavLinkMatch.All">
+                        <span class="oi oi-camera-slr" aria-hidden="true"></span> QR Scanner Chechout
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/qrscanner/checkin"))">
+                    <NavLink class="nav-link" href="/qrscanner/checkin" Match="NavLinkMatch.All">
+                        <span class="oi oi-camera-slr" aria-hidden="true"></span> QR Scanner Checkin
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/inventories/checkouts"))">
+                    <NavLink class="nav-link" href="/inventories/checkouts" Match="NavLinkMatch.All">
                         <span class="oi oi-list" aria-hidden="true"></span> Checkouts
                     </NavLink>
                 </div>                
@@ -30,28 +42,19 @@
         </AuthorizeView>
         <AuthorizeView Roles="Admins">
             <Authorized>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="readexcel">
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/readexcel"))">
+                    <NavLink class="nav-link" href="/readexcel" Match="NavLinkMatch.All">
                         <span class="oi oi-data-transfer-upload" aria-hidden="true"></span> Read Excel
                     </NavLink>
                 </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="qrscanner/checkout">
-                        <span class="oi oi-minus" aria-hidden="true"></span> QR Scanner Chechout
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="qrscanner/checkin">
-                        <span class="oi oi-plus" aria-hidden="true"></span> QR Scanner Checkin
-                    </NavLink>
-                </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="users">
+                
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/users"))">
+                    <NavLink class="nav-link" href="/users" Match="NavLinkMatch.All">
                         <span class="oi oi-person" aria-hidden="true"></span> Users
                     </NavLink>
                 </div>
-                <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="roles">
+                <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/roles"))">
+                    <NavLink class="nav-link" href="/roles" Match="NavLinkMatch.All">
                         <span class="oi oi-people" aria-hidden="true"></span> Roles
                     </NavLink>
                 </div>
@@ -79,5 +82,10 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void navigateOnClick(string url)
+    {
+        _navigationManager.NavigateTo(url, forceLoad: true);
     }
 }

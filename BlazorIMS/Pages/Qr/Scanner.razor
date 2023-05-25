@@ -9,6 +9,8 @@
 @*https://www.nuget.org/packages/ReactorBlazorQRCodeScanner/*@
 @*https://github.com/YannVasseur35/ReactorBlazorQRCodeScanner*@
 
+@implements IDisposable
+
 <PageTitle>@_title</PageTitle>
 <h1>@_title</h1>
 
@@ -179,4 +181,8 @@
 
     }
 
+    public void Dispose()
+    {
+        StopQRScan().Wait();
+    }
 }
