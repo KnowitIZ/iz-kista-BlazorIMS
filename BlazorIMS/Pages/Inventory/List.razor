@@ -13,7 +13,7 @@
 
 <div class="row g-3 mb-3">
     <div class="col-md-2">
-        <input class="form-control" placeholder="Free Text Search..." @bind="@_searchText" @bind:event="oninput" @onkeydown="onEnter" />        
+        <input class="form-control" placeholder="Free Text Search..." @bind="@_searchText" @bind:event="oninput" @onkeydown="onEnter" />
     </div>
     <div class="col-md-2">
         <select class="form-select" @bind="@_selectedCategory">
@@ -107,13 +107,13 @@ else
                             <td>
                                 <NavLink class="btn btn-info btn-sm m-1" href="@($"/inventory/{item.Model.Id}")">Details</NavLink>
                                 @*@if (item.Model.Status == InventoryStatus.Available)
-                                {
-                                    <a class="btn btn-sm btn-success m-1" href="/qrscanner/checkout/@item.Model.Id">Checkout</a>
-                                }
-                                else if (item.Model.Status == InventoryStatus.CheckedOut && item.Model.LastModifiedById == _currentUser!.Id)
-                                {
-                                    <a class="btn btn-sm btn-warning m-1" href="/qrscanner/checkin/@item.Model.Id">Checkin</a>
-                                }*@
+                    {
+                    <a class="btn btn-sm btn-success m-1" href="/qrscanner/checkout/@item.Model.Id">Checkout</a>
+                    }
+                    else if (item.Model.Status == InventoryStatus.CheckedOut && item.Model.LastModifiedById == _currentUser!.Id)
+                    {
+                    <a class="btn btn-sm btn-warning m-1" href="/qrscanner/checkin/@item.Model.Id">Checkin</a>
+                    }*@
                             </td>
                         </tr>
                     }
@@ -179,18 +179,20 @@ else
     private void setItems(List<Inventory> items)
     {
         _items.Clear();
+        var vms = new List<pageViewModel>();
         foreach (var item in items)
         {
-            _items.Add(new pageViewModel
+            vms.Add(new pageViewModel
                 {
                     Model = item,
                     QRCode = _qrCodeGeneratorService.Genereate(item.Id.ToString())
                 });
         }
 
-        if (_items.Any())
+        if (vms.Any())
         {
-            _items = _items.OrderByDescending(x => x.Model.Id).ToList();
+            vms = vms.OrderByDescending(x => x.Model.Id).ToList();
+            _items.AddRange(vms);
         }
 
         _isLoading = false;
