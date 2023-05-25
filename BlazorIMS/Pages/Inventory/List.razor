@@ -106,14 +106,14 @@ else
                             </AuthorizeView>
                             <td>
                                 <NavLink class="btn btn-info btn-sm m-1" href="@($"/inventory/{item.Model.Id}")">Details</NavLink>
-                                @if (item.Model.Status == InventoryStatus.Available)
+                                @*@if (item.Model.Status == InventoryStatus.Available)
                                 {
                                     <a class="btn btn-sm btn-success m-1" href="/qrscanner/checkout/@item.Model.Id">Checkout</a>
                                 }
                                 else if (item.Model.Status == InventoryStatus.CheckedOut && item.Model.LastModifiedById == _currentUser!.Id)
                                 {
                                     <a class="btn btn-sm btn-warning m-1" href="/qrscanner/checkin/@item.Model.Id">Checkin</a>
-                                }
+                                }*@
                             </td>
                         </tr>
                     }

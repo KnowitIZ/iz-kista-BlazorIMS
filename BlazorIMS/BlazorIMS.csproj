@@ -72,6 +72,7 @@
     <Content Remove="Pages\Account\Logout.razor" />
     <Content Remove="Pages\Inventory\List2.razor" />
     <Content Remove="Pages\Inventory\ReadExcel - Copy.razor" />
+    <Content Remove="Pages\Qr\Scanner - Copy.razor" />
   </ItemGroup>
 
   <ItemGroup>
