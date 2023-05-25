@@ -16,36 +16,31 @@
 <EditForm Model="@_model" OnValidSubmit="save">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    @if (_model.Id != 0)
+    @if (_model.Id > 0)
     {
         <div class="form-group">
             <label>ID</label>
             <input class="form-control" disabled value="@_model.Id" />
-        </div>
+        </div>        
     }
+
     <div class="form-group">
         <label>Name</label>
-        <InputText class="form-control" @bind-Value="_model.Name" />
+        <input type="text" disabled class="form-control" value="@_model.Name" />
+        @*<InputText class="form-control" @bind-Value="_model.Name" />*@
         <ValidationMessage For="@(() => _model.Name)" />
     </div>
     <div class="form-group">
         <label>Category</label>
-        <InputText class="form-control" @bind-Value="_model.Category" />
+        <input type="text" disabled class="form-control" value="@_model.Category" />
+        @*<InputText class="form-control" @bind-Value="_model.Category" />*@
         <ValidationMessage For="@(() => _model.Category)" />
     </div>
     <div class="form-group">
         <label>Location</label>
-        <InputText class="form-control" @bind-Value="_model.Location" />
+        <input type="text" disabled class="form-control" value="@_model.Location" />
+        @*<InputText class="form-control" @bind-Value="_model.Location" />*@
         <ValidationMessage For="@(() => _model.Location)" />
-    </div>
-    <div class="form-group">
-        <label>Status</label>
-        <InputSelect class="form-select" @bind-Value="_model.Status">
-            @foreach (var item in Enum.GetValues(typeof(InventoryStatus)).Cast<InventoryStatus>())
-            {
-                <option value="@item">@item.ToString()</option>
-            }
-        </InputSelect>
     </div>
     <div class="form-group">
         <label>Description</label>
@@ -57,10 +52,20 @@
         <label>Datasheet</label>
         <input class="form-control" disabled value="@_model.DataSheet" />
     </div>
+    @*<div class="form-group">
+    <label>Supplier</label>
+    <InputText class="form-control" @bind-Value="_model.Supplier" />
+    <ValidationMessage For="@(() => _model.Supplier)" />
+    </div>*@
+
     <div class="form-group">
-        <label>Supplier</label>
-        <InputText class="form-control" @bind-Value="_model.Supplier" />
-        <ValidationMessage For="@(() => _model.Supplier)" />
+        <label>Status</label>
+        <InputSelect class="form-select" @bind-Value="_model.Status">
+            @foreach (var item in Enum.GetValues(typeof(InventoryStatus)).Cast<InventoryStatus>())
+            {
+                <option value="@item">@item.ToString()</option>
+            }
+        </InputSelect>
     </div>
     @if (Id == 0)
     {
