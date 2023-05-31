@@ -68,11 +68,14 @@ https://blazorims.azurewebsites.net/
 1. Functionality of the QR code checkin and checkout reader. 
 	1. Scanning a QR code results in nothing. 
 	1. Have a confirmation of the QR code being scanned and checked in/checked out.
+1. Update Naming from Checked in to Return
 	
 ## To Do  
-1. Update Naming from Checked in to Return
+1. Enable admin accounts to edit all fields of items in the inventory. 
+1. Create a feature to clean/delete the entire inventory to be able to start fresh. 
+1. Remove "Supplier" field from item in inventory. 
 1. Integrate with Azure Active Directory
-1. Deployed/Launched
+1. Deploy/Launch
 
 
 
