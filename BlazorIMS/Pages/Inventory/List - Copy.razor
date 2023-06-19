@@ -76,7 +76,7 @@ else
                             <th>QR Code</th>
                             <th>
                                 <NavLink class="btn btn-primary btn-sm" href="/inventory/create">Create</NavLink>
-                                <button class="btn btn-dark btn-sm" @onclick="export" >Export to Excel</button>
+                                <button class="btn btn-light btn-sm" onclick="export" >Export Excel</button>
                             </th>
                         </Authorized>
                     </AuthorizeView>
@@ -122,6 +122,14 @@ else
                             </AuthorizeView>
                             <td>
                                 <NavLink class="btn btn-info btn-sm m-1" href="@($"/inventory/{item.Model.Id}")">Details</NavLink>
+                                @*@if (item.Model.Status == InventoryStatus.Available)
+                    {
+                    <a class="btn btn-sm btn-success m-1" href="/qrscanner/checkout/@item.Model.Id">Checkout</a>
+                    }
+                    else if (item.Model.Status == InventoryStatus.CheckedOut && item.Model.LastModifiedById == _currentUser!.Id)
+                    {
+                    <a class="btn btn-sm btn-warning m-1" href="/qrscanner/checkin/@item.Model.Id">Checkin</a>
+                    }*@
                             </td>
                         </tr>
                     }
@@ -157,8 +165,8 @@ else
 
     private BlazorIMS.Pages.Qr.Details? _qrModal = new();
 
-    private IdentityUser? _currentUser = new();
-    private ClaimsPrincipal? _claimsPrinciple = new();
+    private IdentityUser? _currentUser;
+    private ClaimsPrincipal? _claimsPrinciple;
 
     protected async override Task OnInitializedAsync()
     {
@@ -208,7 +216,7 @@ else
 
     private async Task<IQueryable<Inventory>> getQuery()
     {
-        var query = _db.Inventories.Include(x => x.CreatedBy).Include(x => x.LastModifiedBy).AsQueryable();
+        var query = _db.Inventories.Include(x => x.LastModifiedBy).AsQueryable();
         if (!string.IsNullOrEmpty(PageType))
         {
             if (PageType.ToLower() == "checkouts")
@@ -329,15 +337,14 @@ else
         return result;
     }
 
-    private async Task export()
-    {
-        await _excelService.ExportInventory(_js, _items.Select(x=>x.Model).ToList());
-        _navigationManager.NavigateTo("inventories", forceLoad:true);
-    }
-
     private class pageViewModel
     {
         public Inventory Model { get; set; } = new();
         public string QRCode { get; set; } = string.Empty;
+    }
+
+    private async Task export()
+    {
+        _js.InvokeAsync
     }
 }

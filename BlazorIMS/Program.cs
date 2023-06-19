@@ -59,6 +59,7 @@ builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<QrCodeGeneratorService>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddScoped<ExcelService>();
 
 var app = builder.Build();
 

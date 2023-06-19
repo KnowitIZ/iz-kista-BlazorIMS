@@ -1,4 +1,6 @@
-﻿@inject NavigationManager _navigationManager
+﻿@inherits OwningComponentBase<ApplicationDbContext>
+@inject NavigationManager _navigationManager
+@inject IJSRuntime _js
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -58,6 +60,11 @@
                         <span class="oi oi-people" aria-hidden="true"></span> Roles
                     </NavLink>
                 </div>
+                <div class="nav-item px-3" @onclick="deleteAll">
+                    <NavLink class="nav-link" href="javascript:void();" @onclick="deleteAll">
+                        <span class="oi oi-trash" aria-hidden="true"></span> Delete Inventory
+                    </NavLink>
+                </div>
             </Authorized>
         </AuthorizeView>
         @*        <div class="nav-item px-3">
@@ -75,6 +82,7 @@
 
 
 @code {
+    private ApplicationDbContext _db => Service;
     private bool collapseNavMenu = true;
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
@@ -87,5 +95,18 @@
     private void navigateOnClick(string url)
     {
         _navigationManager.NavigateTo(url, forceLoad: true);
+    }
+
+    private async Task deleteAll()
+    {
+        if (await _js.InvokeAsync<bool>("confirm", "Are you sure you want to delete entire database?!!!"))
+        {
+            var all = await _db.Inventories.ToListAsync();
+            _db.Inventories.RemoveRange(all);
+            await _db.SaveChangesAsync();
+
+            _navigationManager.NavigateTo("inventories", forceLoad: true);
+        }
+        
     }
 }
