@@ -1,6 +1,8 @@
 ﻿@page "/admins"
 @attribute [Authorize(Roles = "Admins")]
 
+<!-- Is it possible to combine the two Dashboard.razor files so you only change the names in one place? similarly as in NavMenu.razor with the AuthorizeView -->
+
 <PageTitle>@_title</PageTitle>
 <h3>@_title</h3>
 <hr />
@@ -21,44 +23,44 @@
             <a class="btn btn-primary" href="inventories">
                 <div>
                     <span class="oi oi-list" aria-hidden="true"></span>
-                    Inventories
+                    Inventory
                 </div>
             </a>
         </div>
     </div>
     <div class="col-md-4">
         <div class="d-grid m-3">
-            <a class="btn btn-success" href="qrscanner/checkout">
+            <a class="btn btn-warning" href="qrscanner/checkout">
                 <div>
                     <span class="oi oi-camera-slr" aria-hidden="true"></span>
-                    QR Scanner Chechout
+                    Check out item
                 </div>
             </a>
         </div>
     </div>
     <div class="col-md-4">
         <div class="d-grid m-3">
-            <a class="btn btn-outline-success" href="/qrscanner/checkin">
+            <a class="btn btn-success" href="/qrscanner/checkin">
                 <div>
                     <span class="oi oi-camera-slr" aria-hidden="true"></span>
-                    QR Scanner Checkin
+                    Return item
                 </div>
             </a>
         </div>
     </div>
     <div class="col-md-4">
         <div class="d-grid m-3">
-            <a class="btn btn-warning" href="inventories/checkouts">
+            <a class="btn btn-secondary" href="inventories/checkouts">
                 <div>
                     <span class="oi oi-list" aria-hidden="true"></span>
-                    Checkouts
+                    Checked out items
                 </div>
             </a>
         </div>
     </div>
     <div class="col-md-4">
         <div class="d-grid m-3">
-            <a class="btn btn-dark" href="readexcel">
+            <a class="btn btn-outline-dark" href="readexcel">
                 <div>
                     <span class="oi oi-data-transfer-upload" aria-hidden="true"></span>
                     Read Excel
@@ -69,7 +71,7 @@
 
     <div class="col-md-4">
         <div class="d-grid m-3">
-            <a class="btn btn-danger" href="users">
+            <a class="btn btn-outline-info" href="users">
                 <div>
                     <span class="oi oi-person" aria-hidden="true"></span>
                    Users

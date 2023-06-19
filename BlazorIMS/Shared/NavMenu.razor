@@ -27,17 +27,17 @@
                 </div>
                 <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/qrscanner/checkout"))">
                     <NavLink class="nav-link" href="/qrscanner/checkout" Match="NavLinkMatch.All">
-                        <span class="oi oi-camera-slr" aria-hidden="true"></span> QR Scanner Chechout
+                        <span class="oi oi-camera-slr" aria-hidden="true"></span> Check out item with QR
                     </NavLink>
                 </div>
                 <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/qrscanner/checkin"))">
                     <NavLink class="nav-link" href="/qrscanner/checkin" Match="NavLinkMatch.All">
-                        <span class="oi oi-camera-slr" aria-hidden="true"></span> QR Scanner Checkin
+                        <span class="oi oi-camera-slr" aria-hidden="true"></span> Return item with QR
                     </NavLink>
                 </div>
                 <div class="nav-item px-3" @onclick="@(() => navigateOnClick("/inventories/checkouts"))">
                     <NavLink class="nav-link" href="/inventories/checkouts" Match="NavLinkMatch.All">
-                        <span class="oi oi-list" aria-hidden="true"></span> Checkouts
+                        <span class="oi oi-list" aria-hidden="true"></span> Checked out items
                     </NavLink>
                 </div>                
             </Authorized>
