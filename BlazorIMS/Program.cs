@@ -15,7 +15,7 @@ var connectionString = builder.Configuration.GetConnectionString("AZURE_SQL_CONN
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(connectionString);
-    options.EnableSensitiveDataLogging(true);
+    options.EnableSensitiveDataLogging(false);
 });
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
