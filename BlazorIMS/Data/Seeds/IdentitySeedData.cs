@@ -12,10 +12,10 @@ namespace BlazorIMS.Data.Seeds
             UserManager<IdentityUser> userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
             RoleManager<IdentityRole> roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-            CreateAccountAsync(userManager, roleManager, "admin@izl.com", "secret", "Admins").Wait();
+            CreateAccountAsync(userManager, roleManager, "admin_izl@knowit.se", "secret", "Admins").Wait();
 
-            CreateAccountAsync(userManager, roleManager, "e1@knowit.com", "1", "Employees").Wait();
-            CreateAccountAsync(userManager, roleManager, "e2@knowit.com", "1", "Employees").Wait();
+            CreateAccountAsync(userManager, roleManager, "e1test@knowit.se", "1", "Employees").Wait();
+            CreateAccountAsync(userManager, roleManager, "e2test@knowit.se", "1", "Employees").Wait();
         }
 
         public static async Task CreateAccountAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager,
