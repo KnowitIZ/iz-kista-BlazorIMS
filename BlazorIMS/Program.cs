@@ -7,6 +7,10 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,11 +39,12 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.Configure<CookieAuthenticationOptions>(
- IdentityConstants.ApplicationScheme,
- opts => {
-     opts.LoginPath = "/login";
-     opts.AccessDeniedPath = "/NotAllowed";
- });
+    IdentityConstants.ApplicationScheme,
+    opts =>
+    {
+        opts.LoginPath = "/login";
+        opts.AccessDeniedPath = "/NotAllowed";
+    });
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -64,11 +69,12 @@ if (app.Environment.IsProduction())
 {
     app.UseExceptionHandler("/error");
 }
+
 app.UseRequestLocalization(opts =>
 {
     opts.AddSupportedCultures("en-US")
-    .AddSupportedUICultures("en-US")
-    .SetDefaultCulture("en-US");
+        .AddSupportedUICultures("en-US")
+        .SetDefaultCulture("en-US");
 });
 
 // Configure the HTTP request pipeline.
@@ -98,13 +104,16 @@ app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-ApplicationDbContext context = app.Services.CreateScope().ServiceProvider.GetRequiredService<ApplicationDbContext>();
-if (context.Database.GetPendingMigrations().Any())
-{
-    context.Database.Migrate();
-}
+using var scope = app.Services.CreateScope();
+var serviceProvider = scope.ServiceProvider;
+var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+dbContext.Database.Migrate();
 
-SeedData.EnsurePopulated(context);
+SeedData.EnsurePopulated(dbContext);
 IdentitySeedData.EnsurePopulated(app);
+
+var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
+var logger = loggerFactory.CreateLogger<Program>();
+logger.LogInformation("Application started");
 
 app.Run();
